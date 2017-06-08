@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            #time::before {
+                content: "Time Elapsed: ";
+            }
+            #draw {
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="time"></div>
+        <input id="width" type="number" />
+        <input id="height" type="number" />
+        <input id="pixel" type="number" />
+        <input id="palette" type="text" />
+        <button id="draw">Draw</button>
+        <canvas id="canvas"></canvas>
+
+        <script src="dist/out.js"></script>
+        <!-- <script src="src/main.js"></script>
+        <script src="src/helpers.js"></script> -->
+    </body>
+</html>
