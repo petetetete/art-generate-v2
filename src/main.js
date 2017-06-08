@@ -51,7 +51,10 @@ function ArtManager(canvas, width = 500, height = 500) {
     this.width = width;
     this.height = height;
     this.palette = "cool";
+    this.algorithm = "standard";
     this.pixelSize = 1;
+
+    this.stats = {};
 }
 
 /* Setters */
@@ -78,15 +81,25 @@ ArtManager.prototype.setPalette = function(color) {
 
 ArtManager.prototype.generate = function() {
 
-    let buffer = new Uint8ClampedArray(this.width * this.height * 4);
+    // Initialize stats
+    this.stats["pixelCount"] = 0;
+    this.stats["elapsedTime"] = 0;
+    this.stats["uniqueColors"] = 0;
 
-    /*   
-        perfTests.reduce((sum, a) => sum + a)/perfTests.length
-     */
+    // Stat tracking variables
+    let startTime = performance.now();
+    let uniqueColors = 0;
+
+    // Populate buffer with colors
+    /*let buffer = this._algorithms[this.algorithm]();*/
+    let buffer = new Uint8Array(this.width * this.height * 4);
+
     for (let y = 0; y < this.height; y += this.pixelSize) {
+
         for (let x = 0; x < this.width; x += this.pixelSize) {
 
-            let color = this.palettes[this.palette]();
+            let color = this._palettes[this.palette]();
+
             let yMax = Math.min(y + this.pixelSize, this.height);
             let xMax = Math.min(x + this.pixelSize, this.width);
 
@@ -104,12 +117,38 @@ ArtManager.prototype.generate = function() {
         }
     }
 
+
+    // Load buffer data onto canvas
     let imgData = this.context.createImageData(this.width, this.height);
     imgData.data.set(buffer);
-    this.context.putImageData(imgData, 0, 0);  
+    this.context.putImageData(imgData, 0, 0);
+
+    // Calculate stats
+    let endTime = performance.now();
+    let allColors = {}
+    for (let i = 0; i < buffer.length; i += 4) {
+        let colorID = `${buffer[i]}|${buffer[i + 1]}|${buffer[i + 2]}`;
+        
+        /*if (allColors[colorID]) {
+            allColors[colorID]++;
+        }
+        else {
+            allColors[colorID] = 1;
+            uniqueColors++;
+        }*/
+
+        /*allColors[colorID] = 1 + (allColors[colorID] || 0);*/
+        allColors[colorID] = 1 + (allColors[colorID] || 0);
+    }
+
+    // Fill stats object
+    this.stats.pixelCount = (this.width * this.height) / (this.pixelSize * this.pixelSize);
+    this.stats.elapsedTime = Math.floor(endTime - startTime);
+    this.stats.uniqueColors = uniqueColors;
+
 }
 
-ArtManager.prototype.palettes = {
+ArtManager.prototype._palettes = {
     warm: function() {
         return [getRandomInt(150, 255),
                 getRandomInt(0, 100),
@@ -127,8 +166,100 @@ ArtManager.prototype.palettes = {
     }
 }
 
+/*ArtManager.prototype._algorithms = {
+    standard: function() {
 
-var perfTests = [];
+        console.log("this.palette", this.palette);
+
+        let buffer = new Uint8Array(this.width * this.height * 4);
+
+        for (let y = 0; y < this.height; y += this.pixelSize) {
+
+            for (let x = 0; x < this.width; x += this.pixelSize) {
+
+                let color = this._palettes[this.palette]();
+
+                let yMax = Math.min(y + this.pixelSize, this.height);
+                let xMax = Math.min(x + this.pixelSize, this.width);
+
+                for (let py = y; py < yMax; py++) {
+                    for (let px = x; px < xMax; px++) {
+
+                        let pos = (py * this.width + px) * 4;
+
+                        buffer[pos] = color[0];
+                        buffer[pos + 1] = color[1];
+                        buffer[pos + 2] = color[2];
+                        buffer[pos + 3] = 255;
+                    }   
+                }
+            }
+        }
+
+        return buffer;
+    },
+    horizontal: function() {
+
+        let buffer = new Uint8Array(this.width * this.height * 4);
+
+        for (let y = 0; y < this.height; y += this.pixelSize) {
+
+            let color = this._palettes[this.palette]();
+
+            for (let x = 0; x < this.width; x += this.pixelSize) {
+
+                let yMax = Math.min(y + this.pixelSize, this.height);
+                let xMax = Math.min(x + this.pixelSize, this.width);
+
+                for (let py = y; py < yMax; py++) {
+                    for (let px = x; px < xMax; px++) {
+
+                        let pos = (py * this.width + px) * 4;
+
+                        buffer[pos] = color[0];
+                        buffer[pos + 1] = color[1];
+                        buffer[pos + 2] = color[2];
+                        buffer[pos + 3] = 255;
+                    }   
+                }
+            }
+        }
+
+        return buffer;
+    },
+    vertical: function() {
+
+        let buffer = new Uint8Array(this.width * this.height * 4);
+
+        for (let x = 0; x < this.width; x += this.pixelSize) {
+
+            let color = this._palettes[this.palette]();
+
+            for (let y = 0; y < this.height; y += this.pixelSize) {
+
+                let yMax = Math.min(y + this.pixelSize, this.height);
+                let xMax = Math.min(x + this.pixelSize, this.width);
+
+                for (let py = y; py < yMax; py++) {
+                    for (let px = x; px < xMax; px++) {
+
+                        let pos = (py * this.width + px) * 4;
+
+                        buffer[pos] = color[0];
+                        buffer[pos + 1] = color[1];
+                        buffer[pos + 2] = color[2];
+                        buffer[pos + 3] = 255;
+                    }   
+                }
+            }
+        }
+
+        return buffer;
+    }
+}*/
+
+
+var perfTests = []; // TESTING
 
 var app = new ArtManager(document.getElementById("canvas"), 1000, 1000);
 
@@ -139,11 +270,11 @@ var pixel = document.getElementById("pixel");
 var palette = document.getElementById("palette");
 
 button.onclick = function() {
-    var t1 = performance.now();
+    var t1 = performance.now(); // TESTING
     app.generate();
-    var t2 = performance.now();
-    document.getElementById("time").innerText = `${Math.round(t2 - t1)}ms`;
-    perfTests.push(t2 - t1);
+    var t2 = performance.now(); // TESTING
+    document.getElementById("time").innerText = `${Math.round(t2 - t1)}ms`; // TESTING
+    perfTests.push(t2 - t1); // TESTING
 }
 
 width.onchange = (e) => app.setWidth(e.target.value);
