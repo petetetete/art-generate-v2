@@ -42,13 +42,16 @@ async function something() {
     return [3, 4, 5];
 }*/
 
-const INIT_PALETTE = "random";
-const INIT_ALGORITHM = "standard";
-const INIT_PIXELSIZE = 5;
 
-const MATRIX_PROB = 0.75;
+// Constants!
+const INIT_PALETTE = "Random";
+const INIT_ALGORITHM = "Standard";
+const INIT_PIXELSIZE = 1;
+
+const MATRIX_PROB = 0.15;
 const SPARSE_PROB = 0.7;
 const SMEAR_PROB = 0.9;
+const LINE_PROB = 0.6;
 
 
 function ArtManager(canvas, width = 500, height = 500) {
@@ -64,9 +67,25 @@ function ArtManager(canvas, width = 500, height = 500) {
     this.pixelSize = INIT_PIXELSIZE;
 
     this.stats = {};
+    this.advancedStats = false;
 }
 
-/* Setters */
+// Getters
+ArtManager.prototype.getWidth = function() { return this.width }
+ArtManager.prototype.getHeight = function() { return this.height }
+ArtManager.prototype.getPixelSize = function() { return this.pixelSize }
+ArtManager.prototype.getPalette = function() { return this.palette }
+ArtManager.prototype.getAlgorithm = function() { return this.algorithm }
+
+ArtManager.prototype.getPalettes = function() {
+    return Object.keys(this._palettes);
+}
+
+ArtManager.prototype.getAlgorithms = function() {
+    return Object.keys(this._algorithms);
+}
+
+// Setters
 ArtManager.prototype.setWidth = function(width) {
     let calcWidth = parseInt(width);
 
@@ -95,14 +114,16 @@ ArtManager.prototype.setAlgorithm = function(algorithm) {
 
 ArtManager.prototype.generate = function() {
 
-    // Initialize stats
+    // Initialize basic stats
+    this.stats["basicGenTime"] = 0;
     this.stats["pixelCount"] = 0;
-    this.stats["elapsedTime"] = 0;
+
+    // Initialize advanced stats
+    this.stats["advancedStatTime"] = 0;
     this.stats["uniqueColors"] = 0;
 
     // Stat tracking variables
     let startTime = performance.now();
-    let uniqueColors = 0;
 
     // Populate buffer with colors
     let buffer = this._algorithms[this.algorithm].bind(this)();
@@ -112,50 +133,64 @@ ArtManager.prototype.generate = function() {
     imgData.data.set(buffer);
     this.context.putImageData(imgData, 0, 0);
 
-    // Calculate stats
+    // Calculate and populate basic stats
     let endTime = performance.now();
-    let allColors = {}
-    for (let i = 0; i < buffer.length; i += 4) {
-        let colorID = `${buffer[i]}|${buffer[i + 1]}|${buffer[i + 2]}`;
-        allColors[colorID] = 1 + (allColors[colorID] || 0);
-    }
 
-    // Fill stats object
+    this.stats.basicGenTime = Math.floor(endTime - startTime);
     this.stats.pixelCount = (this.width * this.height) / (this.pixelSize * this.pixelSize);
-    this.stats.elapsedTime = Math.floor(endTime - startTime);
-    this.stats.uniqueColors = uniqueColors;
 
+    // Seperate advanced stats from the synchronous execution
+    if (this.advancedStats) {
+        setTimeout(() => {
+
+            // Calculate and populate advanced stats
+            let startTime = performance.now();
+            let allColors = {}
+
+            for (let i = 0; i < buffer.length; i += 4) {
+                let colorID = `${buffer[i]}|${buffer[i + 1]}|${buffer[i + 2]}`;
+                allColors[colorID] = 1 + (allColors[colorID] || 0);
+            }
+
+            let uniqueColors = Object.keys(allColors).length;
+            let endTime = performance.now();
+
+            this.stats.advancedStatTime = Math.floor(endTime - startTime);
+            this.stats.uniqueColors = uniqueColors;
+
+        }, 0);
+    }
 }
 
 ArtManager.prototype._palettes = {
-    random: function() {
+    "Random": function() {
         return [getRandomInt(0, 255),
                 getRandomInt(0, 255),
                 getRandomInt(0, 255)];
     },
-    warm: function() {
+    "Warm": function() {
         return [getRandomInt(150, 255),
                 getRandomInt(0, 100),
                 getRandomInt(0, 100)];
     },
-    cool: function() {
+    "Cool": function() {
         return [getRandomInt(0, 80),
                 getRandomInt(0, 80),
                 getRandomInt(150, 220)];
     },
-    natural: function() {
+    "Natural": function() {
         return [getRandomInt(25, 100),
                 getRandomInt(80, 180),
                 getRandomInt(25, 100)];
     },
-    matrix: function() {
-        return [0, (Math.random() < MATRIX_PROB) ? 0 : getRandomInt(160, 220), 0];
+    "Matrix": function() {
+        return [0, (Math.random() < MATRIX_PROB) ? getRandomInt(160, 220) : 0, 0];
     },
-    blackwhite: function() {
+    "Black & White": function() {
         let shade = getRandomInt(0, 255);
         return [shade, shade, shade];
     },
-    rainbow: function() {
+    "Rainbow": function() {
         options = [
             [255,0,0],
             [255,127,0],
@@ -170,7 +205,7 @@ ArtManager.prototype._palettes = {
 }
 
 ArtManager.prototype._algorithms = {
-    standard: function() {
+    "Standard": function() {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
 
@@ -199,7 +234,7 @@ ArtManager.prototype._algorithms = {
 
         return buffer;
     },
-    horizontal: function() {
+    "Horizontal": function() {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
 
@@ -228,7 +263,7 @@ ArtManager.prototype._algorithms = {
 
         return buffer;
     },
-    vertical: function() {
+    "Vertical": function() {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
 
@@ -257,7 +292,69 @@ ArtManager.prototype._algorithms = {
 
         return buffer;
     },
-    sparse: function() {
+    "Horizontal (variance)": function() {
+
+        let buffer = new Uint8Array(this.width * this.height * 4);
+
+        for (let y = 0; y < this.height; y += this.pixelSize) {
+
+            let lineColor = this._palettes[this.palette]();
+
+            for (let x = 0; x < this.width; x += this.pixelSize) {
+
+                let color = (Math.random() < LINE_PROB) ? lineColor : this._palettes[this.palette]();
+
+                let yMax = Math.min(y + this.pixelSize, this.height);
+                let xMax = Math.min(x + this.pixelSize, this.width);
+
+                for (let py = y; py < yMax; py++) {
+                    for (let px = x; px < xMax; px++) {
+
+                        let pos = (py * this.width + px) * 4;
+
+                        buffer[pos] = color[0];
+                        buffer[pos + 1] = color[1];
+                        buffer[pos + 2] = color[2];
+                        buffer[pos + 3] = 255;
+                    }   
+                }
+            }
+        }
+
+        return buffer;
+    },
+    "Vertical (variance)": function() {
+
+        let buffer = new Uint8Array(this.width * this.height * 4);
+
+        for (let x = 0; x < this.width; x += this.pixelSize) {
+
+            let lineColor = this._palettes[this.palette]();
+
+            for (let y = 0; y < this.height; y += this.pixelSize) {
+
+                let color = (Math.random() < LINE_PROB) ? lineColor : this._palettes[this.palette]();
+
+                let yMax = Math.min(y + this.pixelSize, this.height);
+                let xMax = Math.min(x + this.pixelSize, this.width);
+
+                for (let py = y; py < yMax; py++) {
+                    for (let px = x; px < xMax; px++) {
+
+                        let pos = (py * this.width + px) * 4;
+
+                        buffer[pos] = color[0];
+                        buffer[pos + 1] = color[1];
+                        buffer[pos + 2] = color[2];
+                        buffer[pos + 3] = 255;
+                    }   
+                }
+            }
+        }
+
+        return buffer;
+    },
+    "Sparse": function() {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
         let mainColor = this._palettes[this.palette]();
@@ -287,7 +384,7 @@ ArtManager.prototype._algorithms = {
 
         return buffer;
     },
-    smear: function() {
+    "Smear": function() {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
         let lastColor = this._palettes[this.palette]();
@@ -317,7 +414,7 @@ ArtManager.prototype._algorithms = {
 
         return buffer;
     },
-    winds: function() {
+    "Winds": function() {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
         let lastColor = this._palettes[this.palette]();

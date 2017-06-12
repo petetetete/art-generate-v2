@@ -2,6 +2,7 @@
 <html>
     <head>
         <title></title>
+        <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
             #time::before {
@@ -17,11 +18,13 @@
         <input id="width" type="number" placeholder="width" />
         <input id="height" type="number" placeholder="height" />
         <input id="pixel" type="number" placeholder="pixel size" />
-        <input id="palette" type="text" placeholder="palette" />
-        <input id="algorithm" type="text" placeholder="algorithm" />
+        <select id="palettes"></select>
+        <select id="algorithm"></select>
         <button id="draw">Draw</button>
-        
-        <canvas id="canvas"></canvas>
+
+        <div class="canv-container">
+            <canvas id="canvas"></canvas>
+        </div>
 
         <script src="dist/out.js"></script>
         <!-- <script src="src/main.js"></script>
