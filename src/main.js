@@ -11,8 +11,10 @@ var pixel = document.getElementById("pixel");
 var palettes = document.getElementById("palettes");
 var algorithms = document.getElementById("algorithm");
 
+var allPalettes = app.getPalettes();
+
 // Initialize values
-app.getPalettes().forEach((palette) => {
+allPalettes.forEach((palette) => {
     palettes.options.add(new Option(palette, palette, false));
 });
 
@@ -26,7 +28,7 @@ pixel.value = app.getPixelSize();
 palettes.value = app.getPalette();
 algorithms.value = app.getAlgorithm();
 
-button.onclick = function() {
+function generateArt() {
     var t1 = performance.now(); // TESTING
     app.generate();
     var t2 = performance.now(); // TESTING
@@ -34,11 +36,15 @@ button.onclick = function() {
     perfTests.push(t2 - t1); // TESTING
 }
 
+button.onclick = generateArt;
 width.onchange = (e) => app.setWidth(e.target.value);
 height.onchange = (e) => app.setHeight(e.target.value);
 pixel.onchange = (e) => app.setPixelSize(e.target.value);
-palettes.onchange = (e) => app.setPalette(e.target.value);
+palettes.onchange = (e) => {
+    app.setPalette(allPalettes.find(x => x == e.target.value)); // I don't know why this fixes anything
+    // app.setPalette(e.target.value);
+}
 algorithms.onchange = (e) => app.setAlgorithm(e.target.value);
 
 // Initial generation
-app.generate();
+generateArt();

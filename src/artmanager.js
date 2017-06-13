@@ -132,7 +132,7 @@ ArtManager.prototype.generate = function() {
     let imgData = this.context.createImageData(this.width, this.height);
     imgData.data.set(buffer);
     this.context.putImageData(imgData, 0, 0);
-
+    
     // Calculate and populate basic stats
     let endTime = performance.now();
 
