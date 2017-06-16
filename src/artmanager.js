@@ -87,21 +87,21 @@ ArtManager.prototype.getAlgorithms = function() {
 
 // Setters
 ArtManager.prototype.setWidth = function(width) {
-    let calcWidth = parseInt(width);
+    let calcWidth = Math.max(1, parseInt(width));
 
     this.canvas.width = calcWidth;
     this.width = calcWidth;
 }
 
 ArtManager.prototype.setHeight = function(height) {
-    let calcHeight = parseInt(height);
+    let calcHeight = Math.max(1, parseInt(height));
 
     this.canvas.height = calcHeight;
     this.height = calcHeight;
 }
 
 ArtManager.prototype.setPixelSize = function(size) {
-    this.pixelSize = parseInt(size);
+    this.pixelSize = Math.max(1, parseInt(size));
 }
 
 ArtManager.prototype.setPalette = function(color) {
