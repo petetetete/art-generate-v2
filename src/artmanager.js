@@ -46,7 +46,7 @@ async function something() {
 // Constants!
 const INIT_PALETTE = "Random";
 const INIT_ALGORITHM = "Standard";
-const INIT_PIXELSIZE = 1;
+const INIT_PIXELSIZE = 3;
 
 const MATRIX_PROB = 0.15;
 const SPARSE_PROB = 0.7;
@@ -54,14 +54,15 @@ const SMEAR_PROB = 0.9;
 const LINE_PROB = 0.6;
 
 
-function ArtManager(canvas, width = 500, height = 500) {
-    canvas.width = width;
-    canvas.height = height;
+function ArtManager(canvas) {
 
     this.canvas = canvas;
     this.context = canvas.getContext("2d");
-    this.width = width;
-    this.height = height;
+    this.generatedImage = null;
+
+    this.width = this.canvas.clientWidth;
+    this.height = this.canvas.clientHeight;
+
     this.palette = INIT_PALETTE;
     this.algorithm = INIT_ALGORITHM;
     this.pixelSize = INIT_PIXELSIZE;
@@ -114,6 +115,14 @@ ArtManager.prototype.setAlgorithm = function(algorithm) {
 
 ArtManager.prototype.generate = function() {
 
+    // Update widths
+    this.width = this.canvas.clientWidth;
+    this.height = this.canvas.clientHeight;
+
+    this.canvas.width = this.canvas.clientWidth;
+    this.canvas.height = this.canvas.clientHeight;
+
+
     // Initialize basic stats
     this.stats["basicGenTime"] = 0;
     this.stats["pixelCount"] = 0;
@@ -132,6 +141,34 @@ ArtManager.prototype.generate = function() {
     let imgData = this.context.createImageData(this.width, this.height);
     imgData.data.set(buffer);
     this.context.putImageData(imgData, 0, 0);
+
+    // Update favicon
+    document.getElementById("favicon").href = this.canvas.toDataURL();
+    
+    /*let genImage = document.createElement("img");
+    genImage.src = this.canvas.toDataURL();
+    genImage.style.borderRadius = "50%";
+    document.body.appendChild(genImage);
+    document.getElementById("favicon").href = faviconCanv.toDataURL();
+
+
+    let genImage = document.createElement("img");
+    genImage.onload = function() {
+
+        let faviconCanv = document.createElement("canvas");
+        faviconCanv.width = 100;
+        faviconCanv.height = 100;
+
+        faviconCanvCTX.save();
+        faviconCanvCTX.beginPath();
+        faviconCanvCTX.arc(50, 50, 50, 0, Math.PI * 2, true);
+        faviconCanvCTX.closePath();
+        faviconCanvCTX.clip();
+        faviconCanvCTX.drawImage(genImage, 0, 0, 100, 100);
+        faviconCanvCTX.restore();
+        document.getElementById("favicon").href = faviconCanv.toDataURL();
+    };
+    genImage.src = this.canvas.toDataURL();*/
     
     // Calculate and populate basic stats
     let endTime = performance.now();
@@ -157,6 +194,8 @@ ArtManager.prototype.generate = function() {
 
             this.stats.advancedStatTime = Math.floor(endTime - startTime);
             this.stats.uniqueColors = uniqueColors;
+
+            console.log(uniqueColors);
 
         }, 0);
     }
@@ -209,9 +248,9 @@ ArtManager.prototype._algorithms = {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
 
-        for (let y = 0; y < this.height; y += this.pixelSize) {
+        for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
-            for (let x = 0; x < this.width; x += this.pixelSize) {
+            for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
                 let color = this._palettes[this.palette]();
 
@@ -238,11 +277,11 @@ ArtManager.prototype._algorithms = {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
 
-        for (let y = 0; y < this.height; y += this.pixelSize) {
+        for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
             let color = this._palettes[this.palette]();
 
-            for (let x = 0; x < this.width; x += this.pixelSize) {
+            for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
                 let yMax = Math.min(y + this.pixelSize, this.height);
                 let xMax = Math.min(x + this.pixelSize, this.width);
@@ -267,11 +306,11 @@ ArtManager.prototype._algorithms = {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
 
-        for (let x = 0; x < this.width; x += this.pixelSize) {
+        for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
             let color = this._palettes[this.palette]();
 
-            for (let y = 0; y < this.height; y += this.pixelSize) {
+            for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
                 let yMax = Math.min(y + this.pixelSize, this.height);
                 let xMax = Math.min(x + this.pixelSize, this.width);
@@ -296,11 +335,11 @@ ArtManager.prototype._algorithms = {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
 
-        for (let y = 0; y < this.height; y += this.pixelSize) {
+        for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
             let lineColor = this._palettes[this.palette]();
 
-            for (let x = 0; x < this.width; x += this.pixelSize) {
+            for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
                 let color = (Math.random() < LINE_PROB) ? lineColor : this._palettes[this.palette]();
 
@@ -327,11 +366,11 @@ ArtManager.prototype._algorithms = {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
 
-        for (let x = 0; x < this.width; x += this.pixelSize) {
+        for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
             let lineColor = this._palettes[this.palette]();
 
-            for (let y = 0; y < this.height; y += this.pixelSize) {
+            for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
                 let color = (Math.random() < LINE_PROB) ? lineColor : this._palettes[this.palette]();
 
@@ -359,9 +398,9 @@ ArtManager.prototype._algorithms = {
         let buffer = new Uint8Array(this.width * this.height * 4);
         let mainColor = this._palettes[this.palette]();
 
-        for (let x = 0; x < this.width; x += this.pixelSize) {
+        for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
-            for (let y = 0; y < this.height; y += this.pixelSize) {
+            for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
                 let color = (Math.random() < SPARSE_PROB) ? mainColor : this._palettes[this.palette]();
 
@@ -389,9 +428,9 @@ ArtManager.prototype._algorithms = {
         let buffer = new Uint8Array(this.width * this.height * 4);
         let lastColor = this._palettes[this.palette]();
 
-        for (let x = 0; x < this.width; x += this.pixelSize) {
+        for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
-            for (let y = 0; y < this.height; y += this.pixelSize) {
+            for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
                 let color = (Math.random() < SMEAR_PROB) ? lastColor : lastColor = this._palettes[this.palette]();
 
@@ -419,9 +458,9 @@ ArtManager.prototype._algorithms = {
         let buffer = new Uint8Array(this.width * this.height * 4);
         let lastColor = this._palettes[this.palette]();
 
-        for (let y = 0; y < this.height; y += this.pixelSize) {
+        for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
-            for (let x = 0; x < this.width; x += this.pixelSize) {
+            for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
                 let color = (Math.random() < SMEAR_PROB) ? lastColor : lastColor = this._palettes[this.palette]();
 

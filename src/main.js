@@ -1,12 +1,12 @@
 var perfTests = []; // TESTING
 
 // Initialize app
-var app = new ArtManager(document.getElementById("canvas"), 1000, 1000);
+var app = new ArtManager(document.getElementById("js-canvas"));
 
 // Get elements
 var button = document.getElementById("draw");
-var width = document.getElementById("width");
-var height = document.getElementById("height");
+/*var width = document.getElementById("width");
+var height = document.getElementById("height");*/
 var pixel = document.getElementById("pixel");
 var palettes = document.getElementById("palettes");
 var algorithms = document.getElementById("algorithm");
@@ -22,8 +22,8 @@ app.getAlgorithms().forEach((algorithm) => {
     algorithms.options.add(new Option(algorithm, algorithm, false));
 });
 
-width.value = app.getWidth();
-height.value = app.getHeight();
+/*width.value = app.getWidth();
+height.value = app.getHeight();*/
 pixel.value = app.getPixelSize();
 palettes.value = app.getPalette();
 algorithms.value = app.getAlgorithm();
@@ -37,8 +37,8 @@ function generateArt() {
 }
 
 button.onclick = generateArt;
-width.onchange = (e) => app.setWidth(e.target.value);
-height.onchange = (e) => app.setHeight(e.target.value);
+/*width.onchange = (e) => app.setWidth(e.target.value);
+height.onchange = (e) => app.setHeight(e.target.value);*/
 pixel.onchange = (e) => app.setPixelSize(e.target.value);
 palettes.onchange = (e) => {
     app.setPalette(allPalettes.find(x => x == e.target.value)); // I don't know why this fixes anything
