@@ -30,7 +30,13 @@ algorithms.value = app.getAlgorithm();
 
 function generateArt() {
     var t1 = performance.now(); // TESTING
-    app.generate();
+    var stats = app.generate();
+
+    console.log(stats.basic);
+    stats.advanced.then((advanced) => {
+        console.log(advanced);
+    });
+
     var t2 = performance.now(); // TESTING
     document.getElementById("time").innerText = `${Math.round(t2 - t1)}ms`; // TESTING
     perfTests.push(t2 - t1); // TESTING

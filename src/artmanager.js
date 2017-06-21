@@ -1,52 +1,8 @@
-/*var canvas = document.getElementById("canvas");
-var ctx = canvas.getContext("2d");
-
-var button = document.getElementById("draw");
-
-var options = {
-    width: 500,
-    height: 500,
-    palette: "warm"
-}
-
-if (window.Worker) {
-    var myWorker = new Worker("src/worker.js");
-
-    button.onclick = function() {
-        myWorker.postMessage(options);
-    }
-
-    myWorker.onmessage = function(e) {
-        var imgData = ctx.createImageData(500, 500);
-        imgData.data.set(e.data);
-        ctx.putImageData(imgData, 0, 0);
-    };
-}
-
-async function something() {
-
-    var buffer = new Uint8ClampedArray(options.width * options.height * 4);
-
-    for(var y = 0; y < options.height; y++) {
-        for(var x = 0; x < options.width; x++) {
-
-            var pos = (y * options.width + x) * 4;
-
-            buffer[pos] = 255;
-            buffer[pos + 1] = 0;
-            buffer[pos + 2] = 0;
-            buffer[pos + 3] = 255;
-        }
-    }
-
-    return [3, 4, 5];
-}*/
-
-
 // Constants!
+const FAVICON_SIZE = 256;
 const INIT_PALETTE = "Random";
 const INIT_ALGORITHM = "Standard";
-const INIT_PIXELSIZE = 3;
+const INIT_PIXELSIZE = 5;
 
 const MATRIX_PROB = 0.15;
 const SPARSE_PROB = 0.7;
@@ -67,8 +23,10 @@ function ArtManager(canvas) {
     this.algorithm = INIT_ALGORITHM;
     this.pixelSize = INIT_PIXELSIZE;
 
-    this.stats = {};
-    this.advancedStats = false;
+    this.basicStats = {};
+    this.advancedStats = {};
+
+    this.advancedStatsEnabled = true;
 }
 
 // Getters
@@ -122,14 +80,9 @@ ArtManager.prototype.generate = function() {
     this.canvas.width = this.canvas.clientWidth;
     this.canvas.height = this.canvas.clientHeight;
 
-
     // Initialize basic stats
-    this.stats["basicGenTime"] = 0;
-    this.stats["pixelCount"] = 0;
-
-    // Initialize advanced stats
-    this.stats["advancedStatTime"] = 0;
-    this.stats["uniqueColors"] = 0;
+    this.basicStats = {};
+    this.advancedStats = {};
 
     // Stat tracking variables
     let startTime = performance.now();
@@ -141,64 +94,67 @@ ArtManager.prototype.generate = function() {
     let imgData = this.context.createImageData(this.width, this.height);
     imgData.data.set(buffer);
     this.context.putImageData(imgData, 0, 0);
-
-    // Update favicon
-    document.getElementById("favicon").href = this.canvas.toDataURL();
-    
-    /*let genImage = document.createElement("img");
-    genImage.src = this.canvas.toDataURL();
-    genImage.style.borderRadius = "50%";
-    document.body.appendChild(genImage);
-    document.getElementById("favicon").href = faviconCanv.toDataURL();
-
-
-    let genImage = document.createElement("img");
-    genImage.onload = function() {
-
-        let faviconCanv = document.createElement("canvas");
-        faviconCanv.width = 100;
-        faviconCanv.height = 100;
-
-        faviconCanvCTX.save();
-        faviconCanvCTX.beginPath();
-        faviconCanvCTX.arc(50, 50, 50, 0, Math.PI * 2, true);
-        faviconCanvCTX.closePath();
-        faviconCanvCTX.clip();
-        faviconCanvCTX.drawImage(genImage, 0, 0, 100, 100);
-        faviconCanvCTX.restore();
-        document.getElementById("favicon").href = faviconCanv.toDataURL();
-    };
-    genImage.src = this.canvas.toDataURL();*/
     
     // Calculate and populate basic stats
     let endTime = performance.now();
 
-    this.stats.basicGenTime = Math.floor(endTime - startTime);
-    this.stats.pixelCount = (this.width * this.height) / (this.pixelSize * this.pixelSize);
+    this.basicStats["basicGenTime"] = Math.floor(endTime - startTime);
+    this.basicStats["pixelCount"] = (this.width * this.height) / (this.pixelSize * this.pixelSize);
 
-    // Seperate advanced stats from the synchronous execution
-    if (this.advancedStats) {
-        setTimeout(() => {
+    // Update favicon asynchronously
+    setTimeout(this._updateFavicon.bind(this), 0);
 
-            // Calculate and populate advanced stats
-            let startTime = performance.now();
-            let allColors = {}
+    // Calculate stat return values
+    let basic = this.basicStats;
+    let advanced = new Promise((resolve) => {
 
-            for (let i = 0; i < buffer.length; i += 4) {
-                let colorID = `${buffer[i]}|${buffer[i + 1]}|${buffer[i + 2]}`;
-                allColors[colorID] = 1 + (allColors[colorID] || 0);
-            }
+        // Calculate and populate advanced stats
+        if (this.advancedStatsEnabled) {
+            setTimeout(() => {
 
-            let uniqueColors = Object.keys(allColors).length;
-            let endTime = performance.now();
+                    let startTime = performance.now();
+                    let allColors = {}
 
-            this.stats.advancedStatTime = Math.floor(endTime - startTime);
-            this.stats.uniqueColors = uniqueColors;
+                    for (let i = 0; i < buffer.length; i += 4) {
+                        let colorID = `${buffer[i]}|${buffer[i + 1]}|${buffer[i + 2]}`;
+                        allColors[colorID] = 1 + (allColors[colorID] || 0);
+                    }
 
-            console.log(uniqueColors);
+                    let uniqueColors = Object.keys(allColors).length;
+                    let endTime = performance.now();
 
-        }, 0);
+                    this.advancedStats["advancedStatTime"] = Math.floor(endTime - startTime);
+                    this.advancedStats["uniqueColors"] = uniqueColors;
+
+                    resolve(this.advancedStats);
+
+            }, 0);
+        }
+        else resolve(null);
+
+    });
+
+    return { basic, advanced };
+}
+
+ArtManager.prototype._updateFavicon = function() {
+
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = FAVICON_SIZE;
+    tempCanvas.height = FAVICON_SIZE;
+    const tempContext = tempCanvas.getContext("2d");
+
+    let thumbImg = document.createElement('img');
+    thumbImg.src = this.canvas.toDataURL();
+    thumbImg.onload = () => {
+        tempContext.beginPath();
+        tempContext.arc(FAVICON_SIZE/2, FAVICON_SIZE/2, FAVICON_SIZE/2, 0, Math.PI * 2, true);
+        tempContext.closePath();
+        tempContext.clip();
+        tempContext.drawImage(thumbImg, 0, 0, FAVICON_SIZE, FAVICON_SIZE);
+        document.getElementById("favicon").href = tempCanvas.toDataURL();
     }
+
 }
 
 ArtManager.prototype._palettes = {
