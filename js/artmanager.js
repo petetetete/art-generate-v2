@@ -9,6 +9,10 @@ const SPARSE_PROB = 0.7;
 const SMEAR_PROB = 0.9;
 const LINE_PROB = 0.6;
 
+const RED_PRIME = 62287637;
+const GREEN_PRIME = 74306387;
+const BLUE_PRIME = 19392253;
+
 
 function ArtManager(canvas) {
 
@@ -28,6 +32,26 @@ function ArtManager(canvas) {
 
     this.advancedStatsEnabled = true;
     this._getColor = this._palettes[INIT_PALETTE];
+
+
+    // Populate the palette of the day only once
+    let date = new Date();
+    let dailyNumber = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+
+    let rMin = RED_PRIME * dailyNumber % 128;
+    let rMax = rMin + 128;
+
+    let gMin = GREEN_PRIME * dailyNumber % 128;
+    let gMax = gMin + 128;
+
+    let bMin = BLUE_PRIME * dailyNumber % 128;
+    let bMax = bMin + 128;
+
+    this._palettes["Of the Day!"] = function() {
+        return [getRandomInt(rMin, rMax),
+                getRandomInt(gMin, gMax),
+                getRandomInt(bMin, bMax)];
+    }
 }
 
 // Getters
@@ -258,7 +282,8 @@ ArtManager.prototype._palettes = {
             [139,0,255]
         ];
         return options[Math.floor(Math.random() * options.length)];
-    }
+    },
+    "Of the Day!": null // Will be populated by the constructor
 }
 
 ArtManager.prototype._algorithms = {
