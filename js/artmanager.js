@@ -13,11 +13,12 @@ const RED_PRIME = 62287637;
 const GREEN_PRIME = 74306387;
 const BLUE_PRIME = 19392253;
 
-const TOP_COLOR_COUNT_MAX = 3;
+const TOP_COLOR_COUNT_MAX = 5;
 
 
 function ArtManager(canvas) {
 
+    // Initialize object variables
     this.canvas = canvas;
     this.context = canvas.getContext("2d");
     this.generatedImage = null;
@@ -33,30 +34,29 @@ function ArtManager(canvas) {
     this.advancedStats = {};
 
     this.advancedStatsEnabled = true;
-    this._getColor = this._palettes[INIT_PALETTE];
+    this._getColor = this._palettes[INIT_PALETTE].bind(this);
 
 
     // Populate the palette of the day only once
     let date = new Date();
     let dailyNumber = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+    let dailyNumber2 = date.getDate() * 1000000 + date.getFullYear() * 100 + (date.getMonth() + 1);
 
-    let rMin = RED_PRIME * dailyNumber % 128;
-    let rMax = rMin + 128;
-
-    let gMin = GREEN_PRIME * dailyNumber % 128;
-    let gMax = gMin + 128;
-
-    let bMin = BLUE_PRIME * dailyNumber % 128;
-    let bMax = bMin + 128;
+    let red1 = RED_PRIME * dailyNumber % 256,
+        red2 = RED_PRIME * dailyNumber2 % 256,
+        green1 = GREEN_PRIME * dailyNumber % 256,
+        green2 = GREEN_PRIME * dailyNumber2 % 256,
+        blue1 = BLUE_PRIME * dailyNumber % 256,
+        blue2 = BLUE_PRIME * dailyNumber2 % 256;
 
     this._palettes["Of the Day!"] = function() {
-        return [getRandomInt(rMin, rMax),
-                getRandomInt(gMin, gMax),
-                getRandomInt(bMin, bMax)];
+        return [this._getRandomInt(red1, red2),
+                this._getRandomInt(green1, green2),
+                this._getRandomInt(blue1, blue2)];
     }
 }
 
-// Getters
+/* Getters */
 ArtManager.prototype.getWidth = function() { return this.width }
 ArtManager.prototype.getHeight = function() { return this.height }
 ArtManager.prototype.getPixelSize = function() { return this.pixelSize }
@@ -71,7 +71,7 @@ ArtManager.prototype.getAlgorithms = function() {
     return Object.keys(this._algorithms);
 }
 
-// Setters
+/* Setters */
 ArtManager.prototype.setWidth = function(width) {
     let calcWidth = Math.max(1, parseInt(width));
 
@@ -92,7 +92,7 @@ ArtManager.prototype.setPixelSize = function(size) {
 
 ArtManager.prototype.setPalette = function(color) {
     this.palette = color;
-    this._getColor = this._palettes[color];
+    this._getColor = this._palettes[color].bind(this);
 }
 
 ArtManager.prototype.setAlgorithm = function(algorithm) {
@@ -160,55 +160,54 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
         uniqueColors: null,
         darkestColor: null,
         lightestColor: null,
-        topColorAppearances: null
+        topColorAppearances: null,
+        consecutiveColor: null
     };
 
+    // General tracking variables
     const allColors = new Object();
     let uniqueColors = 0;
+    let lastColor = [null, null, null];
 
-    let darkestColor = [255, 255, 255];
-    let darkestValue = 765;
+    // Tracking variables for consecutive colors
+    let consecutive = {
+        color: [null, null, null],
+        count: 0
+    }
+    let consecutiveStreak = 1;
 
-    let lightestColor = [0, 0, 0];
-    let lightestValue = 0;
-
-    let top3Colors = {
-        first: {
-            count: 0,
-            color: null
-        },
-        second: {
-            count: 0,
-            color: null
-        },
-        third: {
-            count: 0,
-            color: null
-        }
-    };
-
-    /*for (let i = 0; i < this.height; i += this.pixelSize) {
-        for (let j = 0, stepSize = 4 * this.pixelSize; j < this.width; j += stepSize) {
-            let currentIndex = i * this.width + j;
-
-            console.log(currentIndex);
-
-        }
-        if (i > 20) break;
-    }*/
+    // Tracking variables for extremes
+    let darkest = {
+        color: [255, 255, 255],
+        value: 765
+    }
+    let lightest = {
+        color: [0, 0, 0],
+        value: 0
+    }
 
     for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
         for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
+            // Variables associated with the current pixel
             let pos = (y * this.width + x) * 4;
             let red = buffer[pos];
             let green = buffer[pos + 1];
             let blue = buffer[pos + 2];
 
-            // Log all colors to a colors object
-            let colorID = this._rgbToNumber([red, green, blue]);
+            // Check if the color is a consecutive color
+            if (red == lastColor[0] && blue == lastColor[1] && green == lastColor[2]) {
+                consecutiveStreak += 1;
+            }
+            else if (consecutiveStreak > consecutive.count) {
+                consecutive.color[0] = red, consecutive.color[0] = blue, consecutive.color[0] = green;
+                consecutive.count = consecutiveStreak;
+                consecutiveStreak = 0;
+            }
 
+            // Log all colors to the colors object
+            let colorID = this._rgbToNumber([red, green, blue]);
             if (allColors[colorID] == null) {
                 allColors[colorID] = 1;
                 uniqueColors += 1;
@@ -219,38 +218,39 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
 
             // Keep track of the extreme colors
             let colorValue = red + green + blue;
-            if (colorValue < darkestValue) {
-                darkestValue = colorValue;
-                darkestColor = [red, green, blue];
+            if (colorValue < darkest.value) {
+                darkest.value = colorValue;
+                darkest.color[0] = red, darkest.color[1] = green, darkest.color[2] = blue;
             }
-            if (colorValue > lightestValue) {
-                lightestValue = colorValue;
-                lightestColor = [red, green, blue];
+            if (colorValue > lightest.value) {
+                lightest.value = colorValue;
+                lightest.color[0] = red, lightest.color[1] = green, lightest.color[2] = blue;
             }
+
+            // Save current color
+            lastColor[0] = red, lastColor[1] = green, lastColor[2] = blue;
 
         }
     }
 
-    logTest = allColors;
-
-    let topColors = [];
+    // Get the most frequent colors
     let sortedColors = Object.keys(allColors).sort(function(a, b) {return -(allColors[a] - allColors[b])});
-    console.log("%cTop Color", "font-size: 20px; color: " + this._numberToHex(sortedColors[0]));
-
-    for (let i = 0, total = Math.min(TOP_COLOR_COUNT_MAX, sortedColors.length); i < total; i++) {
-        topColors.push({
-            color: this._numberToHex(sortedColors[i]),
-            count: allColors[sortedColors[i]]
-        });
-    }
+    let topColors = sortedColors.slice(0, TOP_COLOR_COUNT_MAX).map((color) => {
+        return {
+            color: this._numberToHex(color),
+            count: allColors[color]
+        };
+    });
 
     let endTime = performance.now();
 
+    // Fill advanced stats object
     stats.advancedStatTime = Math.floor(endTime - startTime);
     stats.uniqueColors = uniqueColors;
-    stats.darkestColor = darkestColor;
-    stats.lightestColor = lightestColor;
+    stats.darkestColor = darkest.color;
+    stats.lightestColor = lightest.color;
     stats.topColorAppearances = topColors;
+    stats.consecutiveColor = consecutive;
 
     return stats;
 
@@ -280,6 +280,7 @@ ArtManager.prototype._updateFavicon = function() {
 
 }
 
+/* Simple operation helpers */
 ArtManager.prototype._rgbToNumber = function(rgb) {
     return rgb[0] * 65536 +
            rgb[1] * 256 + 
@@ -294,32 +295,37 @@ ArtManager.prototype._numberToHex = function(num) {
     return "#" + ("000000" + parseInt(num).toString(16)).slice(-6);
 }
 
+ArtManager.prototype._getRandomInt = function(n1, n2) {
+    return Math.floor(Math.random() * (Math.abs(n1 - n2) + 1)) + Math.min(n1, n2); 
+}
+
+/* ArtManager object options */
 ArtManager.prototype._palettes = {
     "Random": function() {
-        return [getRandomInt(0, 255),
-                getRandomInt(0, 255),
-                getRandomInt(0, 255)];
+        return [this._getRandomInt(0, 255),
+                this._getRandomInt(0, 255),
+                this._getRandomInt(0, 255)];
     },
     "Warm": function() {
-        return [getRandomInt(150, 255),
-                getRandomInt(0, 100),
-                getRandomInt(0, 100)];
+        return [this._getRandomInt(150, 255),
+                this._getRandomInt(0, 100),
+                this._getRandomInt(0, 100)];
     },
     "Cool": function() {
-        return [getRandomInt(0, 80),
-                getRandomInt(0, 80),
-                getRandomInt(150, 220)];
+        return [this._getRandomInt(0, 80),
+                this._getRandomInt(0, 80),
+                this._getRandomInt(150, 220)];
     },
     "Natural": function() {
-        return [getRandomInt(25, 100),
-                getRandomInt(80, 180),
-                getRandomInt(25, 100)];
+        return [this._getRandomInt(25, 100),
+                this._getRandomInt(80, 180),
+                this._getRandomInt(25, 100)];
     },
     "Matrix": function() {
-        return [0, (Math.random() < MATRIX_PROB) ? getRandomInt(160, 220) : 0, 0];
+        return [0, (Math.random() < MATRIX_PROB) ? this._getRandomInt(160, 220) : 0, 0];
     },
     "Black & White": function() {
-        let shade = getRandomInt(0, 255);
+        let shade = this._getRandomInt(0, 255);
         return [shade, shade, shade];
     },
     "Rainbow": function() {
