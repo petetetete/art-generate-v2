@@ -340,6 +340,14 @@ ArtManager.prototype._palettes = {
         ];
         return options[Math.floor(Math.random() * options.length)];
     },
+    "'Murica": function() {
+        options = [
+            [191,10,48],
+            [0,40,104],
+            [255,255,255]
+        ];
+        return options[Math.floor(Math.random() * options.length)];
+    },
     "Of the Day!": null // Will be populated by the constructor
 }
 
@@ -524,14 +532,14 @@ ArtManager.prototype._algorithms = {
 
         return buffer;
     },
-    "Smear": function() {
+    "Winds": function() {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
         let lastColor = this._getColor();
 
-        for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
+        for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
-            for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
+            for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
                 let color = (Math.random() < SMEAR_PROB) ? lastColor : lastColor = this._getColor();
 
@@ -554,14 +562,14 @@ ArtManager.prototype._algorithms = {
 
         return buffer;
     },
-    "Winds": function() {
+    "Smear": function() {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
         let lastColor = this._getColor();
 
-        for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
+        for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
-            for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
+            for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
                 let color = (Math.random() < SMEAR_PROB) ? lastColor : lastColor = this._getColor();
 
