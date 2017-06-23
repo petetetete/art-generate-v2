@@ -13,6 +13,8 @@ const RED_PRIME = 62287637;
 const GREEN_PRIME = 74306387;
 const BLUE_PRIME = 19392253;
 
+const TOP_COLOR_COUNT_MAX = 3;
+
 
 function ArtManager(canvas) {
 
@@ -111,6 +113,7 @@ ArtManager.prototype.generate = function() {
     this.advancedStats = {};
 
     // Stat tracking variables
+    let pixelCount = (this.width * this.height) / (this.pixelSize * this.pixelSize);
     let startTime = performance.now();
 
     // Populate buffer with colors
@@ -125,7 +128,7 @@ ArtManager.prototype.generate = function() {
     let endTime = performance.now();
 
     this.basicStats["basicGenTime"] = Math.floor(endTime - startTime);
-    this.basicStats["pixelCount"] = (this.width * this.height) / (this.pixelSize * this.pixelSize);
+    this.basicStats["pixelCount"] = Math.round(pixelCount * 100) / 100;
 
     // Update favicon asynchronously
     setTimeout(this._updateFavicon.bind(this), 0);
@@ -137,7 +140,7 @@ ArtManager.prototype.generate = function() {
         // Calculate and populate advanced stats
         if (this.advancedStatsEnabled) {
             setTimeout(() => {
-                this.advancedStats = this._generateAdvancedStats(buffer);
+                this.advancedStats = this._generateAdvancedStats.bind(this)(buffer);
                 resolve(this.advancedStats);
             }, 0);
         }
@@ -150,14 +153,17 @@ ArtManager.prototype.generate = function() {
 
 ArtManager.prototype._generateAdvancedStats = function(buffer) {
 
+    let startTime = performance.now();
+
     const stats = {
         advancedStatTime: null,
         uniqueColors: null,
         darkestColor: null,
-        lightestColor: null
+        lightestColor: null,
+        topColorAppearances: null
     };
 
-    const allColors = {};
+    const allColors = new Object();
     let uniqueColors = 0;
 
     let darkestColor = [255, 255, 255];
@@ -166,30 +172,76 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
     let lightestColor = [0, 0, 0];
     let lightestValue = 0;
 
-    let startTime = performance.now();
-
-    for (let i = 0; i < buffer.length; i += 4) {
-        
-        // Log all colors to a colors object
-        let colorID = this._rgbToNumber([buffer[i], buffer[i + 1], buffer[i + 2]]);
-
-        if (allColors[colorID] == null) {
-            allColors[colorID] = 1;
-            uniqueColors += 1;
+    let top3Colors = {
+        first: {
+            count: 0,
+            color: null
+        },
+        second: {
+            count: 0,
+            color: null
+        },
+        third: {
+            count: 0,
+            color: null
         }
-        else allColors[colorID] += 1;
+    };
 
-        // Keep track of the extreme colors
-        let colorValue = buffer[i] + buffer[i + 1] + buffer[i + 2];
-        if (colorValue < darkestValue) {
-            darkestValue = colorValue;
-            darkestColor = [buffer[i], buffer[i + 1], buffer[i + 2]];
-        }
-        if (colorValue > lightestValue) {
-            lightestValue = colorValue;
-            lightestColor = [buffer[i], buffer[i + 1], buffer[i + 2]];
-        }
+    /*for (let i = 0; i < this.height; i += this.pixelSize) {
+        for (let j = 0, stepSize = 4 * this.pixelSize; j < this.width; j += stepSize) {
+            let currentIndex = i * this.width + j;
 
+            console.log(currentIndex);
+
+        }
+        if (i > 20) break;
+    }*/
+
+    for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
+
+        for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
+
+            let pos = (y * this.width + x) * 4;
+            let red = buffer[pos];
+            let green = buffer[pos + 1];
+            let blue = buffer[pos + 2];
+
+            // Log all colors to a colors object
+            let colorID = this._rgbToNumber([red, green, blue]);
+
+            if (allColors[colorID] == null) {
+                allColors[colorID] = 1;
+                uniqueColors += 1;
+            }
+            else {
+                allColors[colorID] += 1;
+            }
+
+            // Keep track of the extreme colors
+            let colorValue = red + green + blue;
+            if (colorValue < darkestValue) {
+                darkestValue = colorValue;
+                darkestColor = [red, green, blue];
+            }
+            if (colorValue > lightestValue) {
+                lightestValue = colorValue;
+                lightestColor = [red, green, blue];
+            }
+
+        }
+    }
+
+    logTest = allColors;
+
+    let topColors = [];
+    let sortedColors = Object.keys(allColors).sort(function(a, b) {return -(allColors[a] - allColors[b])});
+    console.log("%cTop Color", "font-size: 20px; color: " + this._numberToHex(sortedColors[0]));
+
+    for (let i = 0, total = Math.min(TOP_COLOR_COUNT_MAX, sortedColors.length); i < total; i++) {
+        topColors.push({
+            color: this._numberToHex(sortedColors[i]),
+            count: allColors[sortedColors[i]]
+        });
     }
 
     let endTime = performance.now();
@@ -198,6 +250,7 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
     stats.uniqueColors = uniqueColors;
     stats.darkestColor = darkestColor;
     stats.lightestColor = lightestColor;
+    stats.topColorAppearances = topColors;
 
     return stats;
 
@@ -228,19 +281,17 @@ ArtManager.prototype._updateFavicon = function() {
 }
 
 ArtManager.prototype._rgbToNumber = function(rgb) {
-    return rgb[0] * 1000000 +
-           rgb[1] * 1000 + 
+    return rgb[0] * 65536 +
+           rgb[1] * 256 + 
            rgb[2];
 }
 ArtManager.prototype._numberToRGB = function(num) {
-    return [num % 1000,
-            Math.floor(num / 1000) % 1000,
-            Math.floor(num / 1000000)];
+    return [num % 256,
+            Math.floor(num / 256) % 256,
+            Math.floor(num / 65536)];
 }
-ArtManager.prototype._numberToTotal = function(num) {
-    return num % 1000 +
-           Math.floor(num / 1000) % 1000 +
-           Math.floor(num / 1000000);
+ArtManager.prototype._numberToHex = function(num) {
+    return "#" + ("000000" + parseInt(num).toString(16)).slice(-6);
 }
 
 ArtManager.prototype._palettes = {
@@ -312,6 +363,7 @@ ArtManager.prototype._algorithms = {
                     }   
                 }
             }
+
         }
 
         return buffer;
