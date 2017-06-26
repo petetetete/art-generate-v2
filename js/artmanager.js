@@ -197,11 +197,11 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
             let blue = buffer[pos + 2];
 
             // Check if the color is a consecutive color
-            if (red == lastColor[0] && blue == lastColor[1] && green == lastColor[2]) {
+            if (red == lastColor[0] && green == lastColor[1] && blue == lastColor[2]) {
                 consecutiveStreak += 1;
             }
             else if (consecutiveStreak > consecutive.count) {
-                consecutive.color[0] = red, consecutive.color[0] = blue, consecutive.color[0] = green;
+                consecutive.color[0] = red, consecutive.color[1] = green, consecutive.color[2] = blue;
                 consecutive.count = consecutiveStreak;
                 consecutiveStreak = 0;
             }
@@ -316,7 +316,7 @@ ArtManager.prototype._palettes = {
                 this._getRandomInt(0, 80),
                 this._getRandomInt(150, 220)];
     },
-    "Natural": function() {
+    "Nature": function() {
         return [this._getRandomInt(25, 100),
                 this._getRandomInt(80, 180),
                 this._getRandomInt(25, 100)];
@@ -345,6 +345,15 @@ ArtManager.prototype._palettes = {
             [191,10,48],
             [0,40,104],
             [255,255,255]
+        ];
+        return options[Math.floor(Math.random() * options.length)];
+    },
+    "Google": function() {
+        options = [
+            [60,186,84],
+            [244,194,13],
+            [219,50,54],
+            [72, 133, 237]
         ];
         return options[Math.floor(Math.random() * options.length)];
     },
