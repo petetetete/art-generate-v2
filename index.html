@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="css/main.css" />
         <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" type="text/css" rel="stylesheet" />
 
-        <link type="image/x-icon" rel="shortcut icon" id="favicon" />
+        <link type="image/x-icon" rel="shortcut icon" id="js-favicon" />
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,22 +22,25 @@
                 <div class="body__settings material">
 
                     <label>Select Pixel Size</label>
-                    <input id="pixel" class="body__pixel" type="number" placeholder="pixel size" />
+                    <input id="js-pixel" class="body__pixel" type="number" placeholder="pixel size" />
 
                     <label>Select Color Palette</label>
-                    <select id="palettes" class="body__palettes"></select>
+                    <select id="js-palettes" class="body__palettes"></select>
 
                     <label>Select Algorithm</label>
-                    <select id="algorithm" class="body__algorithms"></select>
+                    <select id="js-algorithm" class="body__algorithms"></select>
 
-                    <button id="draw">Draw</button>
+                    <button id="js-draw">Draw</button>
 
-                    <div id="time"></div>
+                    <div id="js-time"></div>
                 </div>
             </div>
 
             <div class="stats material">
-                
+                <div class="stats__title">Top Colors</div>
+                <div class="stats__body colors">
+                    
+                </div>
             </div>
 
         </div>

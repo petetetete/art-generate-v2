@@ -1,13 +1,13 @@
 var perfTests = []; // TESTING
 
 // Initialize app
-var app = new ArtManager(document.getElementById("js-canvas"));
+var app = new ArtManager(document.getElementById("js-canvas"), document.getElementById("js-favicon"));
 
 // Get elements
-var button = document.getElementById("draw");
-var pixel = document.getElementById("pixel");
-var palettes = document.getElementById("palettes");
-var algorithms = document.getElementById("algorithm");
+var button = document.getElementById("js-draw");
+var pixel = document.getElementById("js-pixel");
+var palettes = document.getElementById("js-palettes");
+var algorithms = document.getElementById("js-algorithm");
 
 var allPalettes = app.getPalettes();
 
@@ -35,7 +35,7 @@ function generateArt() {
     });
 
     var t2 = performance.now(); // TESTING
-    document.getElementById("time").innerText = `${Math.round(t2 - t1)}ms`; // TESTING
+    document.getElementById("js-time").innerText = `${Math.round(t2 - t1)}ms`; // TESTING
     perfTests.push(t2 - t1); // TESTING
 }
 

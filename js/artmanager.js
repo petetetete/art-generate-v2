@@ -16,11 +16,12 @@ const BLUE_PRIME = 19392253;
 const TOP_COLOR_COUNT_MAX = 5;
 
 
-function ArtManager(canvas) {
+function ArtManager(canvas, favicon = null) {
 
     // Initialize object variables
     this.canvas = canvas;
     this.context = canvas.getContext("2d");
+    this.favicon = favicon;
     this.generatedImage = null;
 
     this.width = this.canvas.clientWidth;
@@ -131,7 +132,8 @@ ArtManager.prototype.generate = function() {
     this.basicStats["pixelCount"] = Math.round(pixelCount * 100) / 100;
 
     // Update favicon asynchronously
-    setTimeout(this._updateFavicon.bind(this), 0);
+    if (this.favicon)
+        setTimeout(this._updateFavicon.bind(this), 0);
 
     // Calculate stat return values
     let basic = this.basicStats;
@@ -168,6 +170,7 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
     const allColors = new Object();
     let uniqueColors = 0;
     let lastColor = [null, null, null];
+    let densityTotals = [0, 0, 0];
 
     // Tracking variables for consecutive colors
     let consecutive = {
@@ -179,6 +182,7 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
     // Tracking variables for extremes
     let darkest = {
         color: [255, 255, 255],
+        hex: null,
         value: 765
     }
     let lightest = {
@@ -227,30 +231,64 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
                 lightest.color[0] = red, lightest.color[1] = green, lightest.color[2] = blue;
             }
 
+            // Add to density totals
+            densityTotals[0] += red;
+            densityTotals[1] += green;
+            densityTotals[2] += blue;
+
             // Save current color
             lastColor[0] = red, lastColor[1] = green, lastColor[2] = blue;
 
         }
     }
 
+    // Populate consecutive stat object
+    let consecutiveStat = {
+        rgb: consecutive.color,
+        hex: this._rgbToHex(consecutive.color),
+        count: consecutive.count
+    }
+
+    // Populate extreme stat object
+    let darkestStat = {
+        rgb: darkest.color,
+        hex: this._rgbToHex(darkest.color)
+    };
+    let lightestStat = {
+        rgb: lightest.color,
+        hex: this._rgbToHex(lightest.color)
+    }
+
     // Get the most frequent colors
     let sortedColors = Object.keys(allColors).sort(function(a, b) {return -(allColors[a] - allColors[b])});
     let topColors = sortedColors.slice(0, TOP_COLOR_COUNT_MAX).map((color) => {
         return {
-            color: this._numberToHex(color),
+            rgb: this._numberToRGB(color),
+            hex: this._numberToHex(color),
             count: allColors[color]
         };
     });
+
+    // Calculate the average color with the densities
+    let averageColor = [Math.round(densityTotals[0] / this.basicStats.pixelCount),
+                        Math.round(densityTotals[1] / this.basicStats.pixelCount),
+                        Math.round(densityTotals[2] / this.basicStats.pixelCount)];
+    let average = {
+        rgb: averageColor,
+        hex: this._rgbToHex(averageColor)
+    };
+
 
     let endTime = performance.now();
 
     // Fill advanced stats object
     stats.advancedStatTime = Math.floor(endTime - startTime);
     stats.uniqueColors = uniqueColors;
-    stats.darkestColor = darkest.color;
-    stats.lightestColor = lightest.color;
+    stats.consecutiveColor = consecutiveStat; // Meh, dunno if this is a good stat
+    stats.darkestColor = darkestStat
+    stats.lightestColor = lightestStat;
     stats.topColorAppearances = topColors;
-    stats.consecutiveColor = consecutive;
+    stats.averageColor = average;
 
     return stats;
 
@@ -273,9 +311,10 @@ ArtManager.prototype._updateFavicon = function() {
         tempContext.closePath();
         tempContext.clip();
         tempContext.drawImage(thumbImg, 0, 0, FAVICON_SIZE, FAVICON_SIZE);
-        document.getElementById("favicon").href = tempCanvas.toDataURL();
+        this.favicon.href = tempCanvas.toDataURL();
 
     }
+
     thumbImg.src = this.canvas.toDataURL();
 
 }
@@ -286,13 +325,21 @@ ArtManager.prototype._rgbToNumber = function(rgb) {
            rgb[1] * 256 + 
            rgb[2];
 }
+ArtManager.prototype._rgbToHex = function(rgb) {
+    let r = rgb[0].toString(16);
+    let g = rgb[1].toString(16);
+    let b = rgb[2].toString(16);
+    return "#" + (r.length == 1 ? "0" + r : r) +
+                 (g.length == 1 ? "0" + g : g) + 
+                 (b.length == 1 ? "0" + b : b);
+}
 ArtManager.prototype._numberToRGB = function(num) {
     return [num % 256,
             Math.floor(num / 256) % 256,
             Math.floor(num / 65536)];
 }
 ArtManager.prototype._numberToHex = function(num) {
-    return "#" + ("000000" + parseInt(num).toString(16)).slice(-6);
+    return `#${("000000" + parseInt(num).toString(16)).slice(-6)}`;
 }
 
 ArtManager.prototype._getRandomInt = function(n1, n2) {
@@ -329,7 +376,7 @@ ArtManager.prototype._palettes = {
         return [shade, shade, shade];
     },
     "Rainbow": function() {
-        options = [
+        let options = [
             [255,0,0],
             [255,127,0],
             [255,255,0],
@@ -341,21 +388,39 @@ ArtManager.prototype._palettes = {
         return options[Math.floor(Math.random() * options.length)];
     },
     "'Murica": function() {
-        options = [
+        let variance = 15;
+        let options = [
             [191,10,48],
             [0,40,104],
             [255,255,255]
         ];
-        return options[Math.floor(Math.random() * options.length)];
+
+        let selected = options[Math.floor(Math.random() * options.length)];
+        let rVariance = Math.floor(Math.random() * variance * 2 - variance);
+        let gVariance = Math.floor(Math.random() * variance * 2 - variance);
+        let bVariance = Math.floor(Math.random() * variance * 2 - variance);
+
+        return [Math.max(0, Math.min(selected[0] + rVariance, 255)),
+                Math.max(0, Math.min(selected[1] + gVariance, 255)),
+                Math.max(0, Math.min(selected[2] + bVariance, 255))];
     },
     "Google": function() {
-        options = [
+        let variance = 20;
+        let options = [
             [60,186,84],
             [244,194,13],
             [219,50,54],
             [72, 133, 237]
         ];
-        return options[Math.floor(Math.random() * options.length)];
+
+        let selected = options[Math.floor(Math.random() * options.length)];
+        let rVariance = Math.floor(Math.random() * variance * 2 - variance);
+        let gVariance = Math.floor(Math.random() * variance * 2 - variance);
+        let bVariance = Math.floor(Math.random() * variance * 2 - variance);
+
+        return [Math.max(0, Math.min(selected[0] + rVariance, 255)),
+                Math.max(0, Math.min(selected[1] + gVariance, 255)),
+                Math.max(0, Math.min(selected[2] + bVariance, 255))];
     },
     "Of the Day!": null // Will be populated by the constructor
 }
