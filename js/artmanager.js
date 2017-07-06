@@ -4,16 +4,22 @@ const INIT_PALETTE = "Random";
 const INIT_ALGORITHM = "Standard";
 const INIT_PIXELSIZE = 10;
 
+// Color palette constants
 const MATRIX_PROB = 0.18;
-const SPARSE_PROB = 0.7;
-const SMEAR_PROB = 0.9;
-const LINE_PROB = 0.6;
+const MURICA_VARIANCE = 15;
+const GOOGLE_VARIANCE = 20;
 
 const RED_PRIME = 62287637;
 const GREEN_PRIME = 74306387;
 const BLUE_PRIME = 19392253;
 
-const TOP_COLOR_COUNT_MAX = 5;
+
+// Algorithm constants
+const SPARSE_PROB = 0.7;
+const SMEAR_PROB = 0.9;
+const LINE_PROB = 0.6;
+
+const TOP_COLOR_COUNT_MAX = 10;
 
 
 function ArtManager(canvas, favicon = null) {
@@ -63,6 +69,7 @@ ArtManager.prototype.getHeight = function() { return this.height }
 ArtManager.prototype.getPixelSize = function() { return this.pixelSize }
 ArtManager.prototype.getPalette = function() { return this.palette }
 ArtManager.prototype.getAlgorithm = function() { return this.algorithm }
+ArtManager.prototype.getAdvancedStatsEnabled = function() { return this.advancedStatsEnabled }
 
 ArtManager.prototype.getPalettes = function() {
     return Object.keys(this._palettes);
@@ -99,6 +106,11 @@ ArtManager.prototype.setPalette = function(color) {
 ArtManager.prototype.setAlgorithm = function(algorithm) {
     this.algorithm = algorithm;
 }
+
+ArtManager.prototype.setAdvancedStatsEnabled = function(advancedStatsEnabled) {
+    this.advancedStatsEnabled = advancedStatsEnabled;
+}
+
 
 ArtManager.prototype.generate = function() {
 
@@ -359,14 +371,14 @@ ArtManager.prototype._palettes = {
                 this._getRandomInt(0, 100)];
     },
     "Cool": function() {
-        return [this._getRandomInt(0, 80),
-                this._getRandomInt(0, 80),
-                this._getRandomInt(150, 220)];
+        return [this._getRandomInt(0, 125),
+                this._getRandomInt(0, 125),
+                this._getRandomInt(150, 255)];
     },
     "Nature": function() {
-        return [this._getRandomInt(25, 100),
-                this._getRandomInt(80, 180),
-                this._getRandomInt(25, 100)];
+        return [this._getRandomInt(40, 120),
+                this._getRandomInt(100, 200),
+                this._getRandomInt(40, 120)];
     },
     "Matrix": function() {
         return [0, (Math.random() < MATRIX_PROB) ? this._getRandomInt(160, 220) : 0, 0];
@@ -377,18 +389,28 @@ ArtManager.prototype._palettes = {
     },
     "Rainbow": function() {
         let options = [
-            [255,0,0],
-            [255,127,0],
-            [255,255,0],
-            [0,255,0],
-            [0,0,255],
-            [75,0,130],
-            [139,0,255]
+            [248,12,18],
+            [238,17,0],
+            [255,51,27],
+            [255,68,34],
+            [255,102,68],
+            [255,153,51],
+            [254,174,45],
+            [204,187,51],
+            [208,195,16],
+            [170,204,34],
+            [105,208,37],
+            [34,204,170],
+            [18,204,170],
+            [17,170,187],
+            [68,68,221],
+            [51,17,187],
+            [59,12,189],
+            [68,34,153]
         ];
         return options[Math.floor(Math.random() * options.length)];
     },
     "'Murica": function() {
-        let variance = 15;
         let options = [
             [191,10,48],
             [0,40,104],
@@ -396,16 +418,15 @@ ArtManager.prototype._palettes = {
         ];
 
         let selected = options[Math.floor(Math.random() * options.length)];
-        let rVariance = Math.floor(Math.random() * variance * 2 - variance);
-        let gVariance = Math.floor(Math.random() * variance * 2 - variance);
-        let bVariance = Math.floor(Math.random() * variance * 2 - variance);
+        let rVariance = Math.floor(Math.random() * MURICA_VARIANCE * 2 - MURICA_VARIANCE);
+        let gVariance = Math.floor(Math.random() * MURICA_VARIANCE * 2 - MURICA_VARIANCE);
+        let bVariance = Math.floor(Math.random() * MURICA_VARIANCE * 2 - MURICA_VARIANCE);
 
         return [Math.max(0, Math.min(selected[0] + rVariance, 255)),
                 Math.max(0, Math.min(selected[1] + gVariance, 255)),
                 Math.max(0, Math.min(selected[2] + bVariance, 255))];
     },
     "Google": function() {
-        let variance = 20;
         let options = [
             [60,186,84],
             [244,194,13],
@@ -414,9 +435,9 @@ ArtManager.prototype._palettes = {
         ];
 
         let selected = options[Math.floor(Math.random() * options.length)];
-        let rVariance = Math.floor(Math.random() * variance * 2 - variance);
-        let gVariance = Math.floor(Math.random() * variance * 2 - variance);
-        let bVariance = Math.floor(Math.random() * variance * 2 - variance);
+        let rVariance = Math.floor(Math.random() * GOOGLE_VARIANCE * 2 - GOOGLE_VARIANCE);
+        let gVariance = Math.floor(Math.random() * GOOGLE_VARIANCE * 2 - GOOGLE_VARIANCE);
+        let bVariance = Math.floor(Math.random() * GOOGLE_VARIANCE * 2 - GOOGLE_VARIANCE);
 
         return [Math.max(0, Math.min(selected[0] + rVariance, 255)),
                 Math.max(0, Math.min(selected[1] + gVariance, 255)),

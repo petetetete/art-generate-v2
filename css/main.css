@@ -57,7 +57,10 @@ html, body {
         margin-left: var(--elem-spacing);
     }
 
-    .body__pixel, .body__palettes, .body__algorithms {
+    .body__pixel,
+    .body__palettes,
+    .body__algorithms,
+    .body__advancedStatsEnabled {
         margin-top: 3px;
         margin-bottom: 10px;
         border-radius: 3px;

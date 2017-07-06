@@ -8,6 +8,7 @@ var button = document.getElementById("js-draw");
 var pixel = document.getElementById("js-pixel");
 var palettes = document.getElementById("js-palettes");
 var algorithms = document.getElementById("js-algorithm");
+var advancedStatsEnabled = document.getElementById("js-advancedStatsEnabled");
 
 var allPalettes = app.getPalettes();
 
@@ -23,6 +24,7 @@ app.getAlgorithms().forEach((algorithm) => {
 pixel.value = app.getPixelSize();
 palettes.value = app.getPalette();
 algorithms.value = app.getAlgorithm();
+advancedStatsEnabled.value = app.getAdvancedStatsEnabled();
 
 function generateArt() {
     var t1 = performance.now(); // TESTING
@@ -41,11 +43,9 @@ function generateArt() {
 
 button.onclick = generateArt;
 pixel.onchange = (e) => app.setPixelSize(e.target.value);
-palettes.onchange = (e) => {
-    // app.setPalette(e.target.value);
-    app.setPalette(allPalettes.find(x => x == e.target.value)); // I don't know why this fixes anything
-}
+palettes.onchange = (e) => app.setPalette(allPalettes.find(x => x == e.target.value));
 algorithms.onchange = (e) => app.setAlgorithm(e.target.value);
+advancedStatsEnabled.onchange = (e) => app.setAdvancedStatsEnabled(e.target.value == "true");
 
 // Initial generation
 generateArt();
