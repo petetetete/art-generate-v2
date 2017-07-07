@@ -1,8 +1,8 @@
 // Constants!
 const FAVICON_SIZE = 256;
+const INIT_PIXELSIZE = 5;
 const INIT_PALETTE = "Random";
 const INIT_ALGORITHM = "Standard";
-const INIT_PIXELSIZE = 10;
 
 // Color palette constants
 const MATRIX_PROB = 0.18;
@@ -41,6 +41,9 @@ function ArtManager(canvas, favicon = null) {
     this.advancedStats = {};
 
     this.advancedStatsEnabled = true;
+
+    this._timesGenerated = 0;
+    this._generationTimes = [];
     this._getColor = this._palettes[INIT_PALETTE].bind(this);
 
 
@@ -139,8 +142,17 @@ ArtManager.prototype.generate = function() {
     
     // Calculate and populate basic stats
     let endTime = performance.now();
+    let generationTime = Math.floor(endTime - startTime);
 
-    this.basicStats["basicGenTime"] = Math.floor(endTime - startTime);
+    // Update tracking member variables
+    this._generationTimes.push(generationTime);
+    this._timesGenerated += 1;
+
+    this.basicStats["timesGenerated"] = this._timesGenerated;
+    this.basicStats["generationTime"] = generationTime;
+    // TODO: Consider calculating this without a reduce because reduce is slow
+    this.basicStats["averageGenerationTime"]
+        = Math.floor(this._generationTimes.reduce((a, b) => a + b) / this._generationTimes.length);
     this.basicStats["pixelCount"] = Math.round(pixelCount * 100) / 100;
 
     // Update favicon asynchronously
@@ -169,14 +181,7 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
 
     let startTime = performance.now();
 
-    const stats = {
-        advancedStatTime: null,
-        uniqueColors: null,
-        darkestColor: null,
-        lightestColor: null,
-        topColorAppearances: null,
-        consecutiveColor: null
-    };
+    const stats = {};
 
     // General tracking variables
     const allColors = new Object();
@@ -294,13 +299,13 @@ ArtManager.prototype._generateAdvancedStats = function(buffer) {
     let endTime = performance.now();
 
     // Fill advanced stats object
-    stats.advancedStatTime = Math.floor(endTime - startTime);
-    stats.uniqueColors = uniqueColors;
-    stats.consecutiveColor = consecutiveStat; // Meh, dunno if this is a good stat
-    stats.darkestColor = darkestStat
-    stats.lightestColor = lightestStat;
-    stats.topColorAppearances = topColors;
-    stats.averageColor = average;
+    stats["calculationTime"] = Math.floor(endTime - startTime);
+    stats["uniqueColors"] = uniqueColors;
+    stats["consecutiveColor"] = consecutiveStat; // Meh, dunno if this is a good stat
+    stats["darkestColor"] = darkestStat
+    stats["lightestColor"] = lightestStat;
+    stats["topColorAppearances"] = topColors;
+    stats["averageColor"] = average;
 
     return stats;
 

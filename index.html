@@ -13,7 +13,7 @@
     </head>
     <body>
         <div class="container">
-            <div class="header material">Title</div>
+            <div class="header material">Art Generate</div>
 
             <div class="body">
                 <div class="body__container material">
@@ -21,32 +21,30 @@
                 </div>
                 <div class="body__settings material">
 
+                    <div class="material__title">Settings</div>
+
                     <label>Select Pixel Size</label>
-                    <input id="js-pixel" class="body__pixel" type="number" placeholder="pixel size" />
+                    <input id="js-pixel" type="number" placeholder="pixel size" />
 
                     <label>Select Color Palette</label>
-                    <select id="js-palettes" class="body__palettes"></select>
+                    <select id="js-palettes"></select>
 
                     <label>Select Algorithm</label>
-                    <select id="js-algorithm" class="body__algorithms"></select>
+                    <select id="js-algorithm"></select>
 
-                    <label>Advanced Stats Enabled</label>
-                    <select id="js-advancedStatsEnabled" class="body__advancedStatsEnabled">
+                    <label>Advanced Stats Enabled?</label>
+                    <select id="js-advancedStatsEnabled">
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </select>
 
-                    <button id="js-draw">Draw</button>
-
-                    <div id="js-time"></div>
+                    <button id="js-draw" class="body__submit">Draw</button>
                 </div>
             </div>
 
-            <div class="stats material">
-                <div class="stats__title">Top Colors</div>
-                <div class="stats__body colors">
-                    
-                </div>
+            <div class="basic-stats material">
+                <div class="material__title">Basic Stats</div>
+                Time: <span id="js-time"></span>
             </div>
 
         </div>
