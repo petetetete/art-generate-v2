@@ -17,9 +17,10 @@ const BLUE_PRIME = 19392253;
 // Algorithm constants
 const SPARSE_PROB = 0.7;
 const SMEAR_PROB = 0.9;
+const SMEAR_PROB_ADJUST = 0.08;
 const LINE_PROB = 0.6;
 
-const TOP_COLOR_COUNT_MAX = 10;
+const TOP_COLOR_COUNT_MAX = 5;
 
 
 function ArtManager(canvas, favicon = null) {
@@ -641,7 +642,7 @@ ArtManager.prototype._algorithms = {
 
             for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
-                let color = (Math.random() < SMEAR_PROB) ? lastColor : lastColor = this._getColor();
+                let color = (Math.random() < SMEAR_PROB + SMEAR_PROB_ADJUST / this.pixelSize) ? lastColor : lastColor = this._getColor();
 
                 let yMax = Math.min(y + this.pixelSize, this.height);
                 let xMax = Math.min(x + this.pixelSize, this.width);
@@ -671,7 +672,7 @@ ArtManager.prototype._algorithms = {
 
             for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
-                let color = (Math.random() < SMEAR_PROB) ? lastColor : lastColor = this._getColor();
+                let color = (Math.random() < SMEAR_PROB + SMEAR_PROB_ADJUST / this.pixelSize) ? lastColor : lastColor = this._getColor();
 
                 let yMax = Math.min(y + this.pixelSize, this.height);
                 let xMax = Math.min(x + this.pixelSize, this.width);

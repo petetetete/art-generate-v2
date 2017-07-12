@@ -4,7 +4,7 @@ var perfTests = []; // TESTING
 const app = new ArtManager(document.getElementById("js-canvas"), document.getElementById("js-favicon"));
 
 // Get elements
-const button = document.getElementById("js-draw");
+const drawButton = document.getElementById("js-draw");
 const pixel = document.getElementById("js-pixel");
 const palettes = document.getElementById("js-palettes");
 const algorithms = document.getElementById("js-algorithm");
@@ -33,12 +33,20 @@ advancedStatsEnabled.value = app.getAdvancedStatsEnabled();
 
 function generateArt() {
 
+    console.log(drawButton.classList);
+    // Add loading spinners
+    drawButton.classList.add("body__submit--active");
+
     var stats = app.generate();
+
 
     // Stats testing
     console.log(stats.basic);
     stats.advanced.then((advanced) => {
         console.log(advanced);
+
+        // Remove loading spinners
+        drawButton.classList.remove("body__submit--active");
     });
 
     // Populate basic stats
@@ -49,7 +57,7 @@ function generateArt() {
 
 }
 
-button.onclick = generateArt;
+drawButton.onclick = generateArt;
 pixel.onchange = (e) => app.setPixelSize(e.target.value);
 palettes.onchange = (e) => app.setPalette(allPalettes.find(x => x == e.target.value));
 algorithms.onchange = (e) => app.setAlgorithm(e.target.value);
