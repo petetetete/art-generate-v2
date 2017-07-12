@@ -396,6 +396,17 @@ ArtManager.prototype._palettes = {
         let shade = this._getRandomInt(0, 255);
         return [shade, shade, shade];
     },
+    "Camouflage": function() {
+        let options = [
+            [96,68,57],
+            [158,154,117],
+            [28,34,46],
+            [65,83,59],
+            [85,72,64]
+        ];
+
+        return options[Math.floor(Math.random() * options.length)];
+    },
     "Rainbow": function() {
         let options = [
             [248,12,18],
