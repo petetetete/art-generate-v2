@@ -3,6 +3,7 @@ const FAVICON_SIZE = 256;
 const INIT_PIXELSIZE = 4;
 const INIT_PALETTE = "Random";
 const INIT_ALGORITHM = "Standard";
+const TOP_COLOR_COUNT_MAX = 5;
 
 // Color palette constants
 const MATRIX_PROB = 0.18;
@@ -13,15 +14,16 @@ const RED_PRIME = 62287637;
 const GREEN_PRIME = 74306387;
 const BLUE_PRIME = 19392253;
 
-
 // Algorithm constants
 const SPARSE_PROB = 0.7;
 const SMEAR_PROB = 0.9;
 const SMEAR_PROB_ADJUST = 0.08;
 const LINE_PROB = 0.6;
 const TEAR_PROB = 0.96;
-
-const TOP_COLOR_COUNT_MAX = 5;
+const PLAID_PROB = 0.85;
+const PLAID_MIN_THICK = 2;
+const PLAID_MAX_THICK = 5;
+const PLAID_MIN_GAP = 6;
 
 
 function ArtManager(canvas, favicon = null) {
@@ -694,7 +696,7 @@ ArtManager.prototype._algorithms = {
 
         return buffer;
     },
-    "Tear": function() {
+    "Cascade": function() {
 
         let buffer = new Uint8Array(this.width * this.height * 4);
 
@@ -743,6 +745,117 @@ ArtManager.prototype._algorithms = {
                     }
                 }
             }
+        }
+
+        return buffer;
+    },
+    "Plaid": function() {
+
+        let buffer = new Uint8Array(this.width * this.height * 4);
+
+        // The main background color of the plaid pattern
+        let mainColor = this._getColor();
+        let currLineColor;
+        let horizontalPattern = [];
+
+        let xLineGap = 0;
+        let xThickness = 0;
+
+        let yLineGap = 0;
+        let yThickness = 0;
+
+
+        for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
+
+            // Only generate a new color if the line gap and mathematical gods allow it
+            if (yThickness == 0 && yLineGap == 0 && Math.random() >= PLAID_PROB) {
+                currLineColor = this._getColor();
+                yThickness = Math.round(Math.random() * (PLAID_MAX_THICK - PLAID_MIN_THICK)) + PLAID_MIN_THICK;
+                yLineGap = PLAID_MIN_GAP;
+            }
+
+            for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
+
+                let color;
+
+                // If on the first horizontal line, generate the main pattern
+                if (y == 0) {
+
+                    // If there is still thickness on the current line
+                    if (xThickness > 0) {
+
+                        // Find color to the left of the current point
+                        let start = (y * this.width + (x - 1)) * 4;
+                        color = [buffer[start], buffer[start + 1], buffer[start + 2]];
+                        xThickness -= 1;
+                    }
+
+                    // If we are no longer rendering the required thickness
+                    else {
+
+                        // If line gap is to be respected, decrement it
+                        if (xLineGap > 0) xLineGap -= 1;
+
+                        // Only generate a new color if the line gap and mathematical gods allow it
+                        if (xLineGap == 0 && Math.random() >= PLAID_PROB) {
+                            color = this._getColor();
+                            xThickness = Math.round(Math.random() * (PLAID_MAX_THICK - PLAID_MIN_THICK)) + PLAID_MIN_THICK;
+                            xLineGap = PLAID_MIN_GAP;
+                        }
+                        else {
+                            color = mainColor;
+                        }
+                    }
+
+                    horizontalPattern.push(color);
+                }
+
+                // If we are on all subsequent lines
+                else {
+
+                    // If there is y thickness to render
+                    if (yThickness > 0) {
+
+                        let currPatternColor = horizontalPattern[x/this.pixelSize];
+
+                        // If we need to average the non-main line colors
+                        if (currPatternColor != mainColor) {
+                            color = [Math.floor((currPatternColor[0] + currLineColor[0]) / 2),
+                                     Math.floor((currPatternColor[1] + currLineColor[1]) / 2),
+                                     Math.floor((currPatternColor[2] + currLineColor[2]) / 2)]
+                        }
+
+                        // Simply use the current line color
+                        else {
+                            color = currLineColor;
+                        }
+                    }
+
+                    // Otherwise simply render the main horizontal pattern
+                    else {
+                        color = horizontalPattern[x/this.pixelSize];
+                    }
+                }
+
+                let yMax = Math.min(y + this.pixelSize, this.height);
+                let xMax = Math.min(x + this.pixelSize, this.width);
+
+                for (let py = y; py < yMax; py++) {
+                    for (let px = x; px < xMax; px++) {
+
+                        let pos = (py * this.width + px) * 4;
+
+                        buffer[pos] = color[0];
+                        buffer[pos + 1] = color[1];
+                        buffer[pos + 2] = color[2];
+                        buffer[pos + 3] = 255;
+                    }
+                }
+            }
+
+            // Decrement y tracking variables
+            if (yThickness > 0) yThickness -= 1;
+            else if (yLineGap > 0) yLineGap -= 1;
         }
 
         return buffer;
