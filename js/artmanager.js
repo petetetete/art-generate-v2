@@ -1,6 +1,6 @@
 // Constants!
 const FAVICON_SIZE = 256;
-const INIT_PIXELSIZE = 5;
+const INIT_PIXELSIZE = 4;
 const INIT_PALETTE = "Random";
 const INIT_ALGORITHM = "Standard";
 
@@ -19,6 +19,7 @@ const SPARSE_PROB = 0.7;
 const SMEAR_PROB = 0.9;
 const SMEAR_PROB_ADJUST = 0.08;
 const LINE_PROB = 0.6;
+const TEAR_PROB = 0.96;
 
 const TOP_COLOR_COUNT_MAX = 5;
 
@@ -475,7 +476,7 @@ ArtManager.prototype._algorithms = {
                         buffer[pos + 1] = color[1];
                         buffer[pos + 2] = color[2];
                         buffer[pos + 3] = 255;
-                    }   
+                    }
                 }
             }
 
@@ -505,7 +506,7 @@ ArtManager.prototype._algorithms = {
                         buffer[pos + 1] = color[1];
                         buffer[pos + 2] = color[2];
                         buffer[pos + 3] = 255;
-                    }   
+                    }
                 }
             }
         }
@@ -534,7 +535,7 @@ ArtManager.prototype._algorithms = {
                         buffer[pos + 1] = color[1];
                         buffer[pos + 2] = color[2];
                         buffer[pos + 3] = 255;
-                    }   
+                    }
                 }
             }
         }
@@ -565,7 +566,7 @@ ArtManager.prototype._algorithms = {
                         buffer[pos + 1] = color[1];
                         buffer[pos + 2] = color[2];
                         buffer[pos + 3] = 255;
-                    }   
+                    }
                 }
             }
         }
@@ -596,7 +597,7 @@ ArtManager.prototype._algorithms = {
                         buffer[pos + 1] = color[1];
                         buffer[pos + 2] = color[2];
                         buffer[pos + 3] = 255;
-                    }   
+                    }
                 }
             }
         }
@@ -626,7 +627,7 @@ ArtManager.prototype._algorithms = {
                         buffer[pos + 1] = color[1];
                         buffer[pos + 2] = color[2];
                         buffer[pos + 3] = 255;
-                    }   
+                    }
                 }
             }
         }
@@ -656,7 +657,7 @@ ArtManager.prototype._algorithms = {
                         buffer[pos + 1] = color[1];
                         buffer[pos + 2] = color[2];
                         buffer[pos + 3] = 255;
-                    }   
+                    }
                 }
             }
         }
@@ -686,7 +687,60 @@ ArtManager.prototype._algorithms = {
                         buffer[pos + 1] = color[1];
                         buffer[pos + 2] = color[2];
                         buffer[pos + 3] = 255;
-                    }   
+                    }
+                }
+            }
+        }
+
+        return buffer;
+    },
+    "Tear": function() {
+
+        let buffer = new Uint8Array(this.width * this.height * 4);
+
+        for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
+
+            for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
+
+                let color;
+                let random = Math.random();
+                let aboveColor;
+                let leftColor;
+
+                // Find the colors above and to the left of the current point
+                if (y > 0) {
+                    let start = ((y - 1) * this.width + x) * 4;
+                    aboveColor = [buffer[start], buffer[start + 1], buffer[start + 2]];
+                }
+                if (x > 0) {
+                    let start = (y * this.width + (x - 1)) * 4;
+                    leftColor = [buffer[start], buffer[start + 1], buffer[start + 2]];
+                }
+
+                // Randomly determine which color to select
+                if (random < TEAR_PROB / 2) {
+                    color = aboveColor || leftColor || this._getColor();
+                }
+                else if (random < TEAR_PROB) {
+                    color = leftColor || aboveColor || this._getColor();
+                }
+                else {
+                    color = this._getColor();
+                }
+
+                let yMax = Math.min(y + this.pixelSize, this.height);
+                let xMax = Math.min(x + this.pixelSize, this.width);
+
+                for (let py = y; py < yMax; py++) {
+                    for (let px = x; px < xMax; px++) {
+
+                        let pos = (py * this.width + px) * 4;
+
+                        buffer[pos] = color[0];
+                        buffer[pos + 1] = color[1];
+                        buffer[pos + 2] = color[2];
+                        buffer[pos + 3] = 255;
+                    }
                 }
             }
         }

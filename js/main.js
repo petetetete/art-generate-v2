@@ -33,7 +33,6 @@ advancedStatsEnabled.value = app.getAdvancedStatsEnabled();
 
 function generateArt() {
 
-    console.log(drawButton.classList);
     // Add loading spinners
     drawButton.classList.add("body__submit--active");
 
