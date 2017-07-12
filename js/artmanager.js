@@ -824,13 +824,22 @@ ArtManager.prototype._algorithms = {
                 // If we are on all subsequent lines
                 else {
 
-                    // If there is y thickness to render
-                    if (yThickness > 0) {
+                    // If there is y thickness to render and our line isn't the main color
+                    if (yThickness > 0 &&
+                        currLineColor[0] != mainColor[0] &&
+                        currLineColor[1] != mainColor[1] &&
+                        currLineColor[2] != mainColor[2]) {
 
                         let currPatternColor = horizontalPattern[x/this.pixelSize];
 
                         // If we need to average the non-main line colors
-                        if (currPatternColor != mainColor) {
+                        if (currLineColor[0] != mainColor[0] &&
+                            currLineColor[1] != mainColor[1] &&
+                            currLineColor[2] != mainColor[2] && 
+                            currPatternColor[0] != mainColor[0] &&
+                            currPatternColor[1] != mainColor[1] &&
+                            currPatternColor[2] != mainColor[2]) {
+                            
                             color = [Math.floor((currPatternColor[0] + currLineColor[0]) / 2),
                                      Math.floor((currPatternColor[1] + currLineColor[1]) / 2),
                                      Math.floor((currPatternColor[2] + currLineColor[2]) / 2)]
