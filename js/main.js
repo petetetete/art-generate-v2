@@ -1,16 +1,21 @@
 var perfTests = []; // TESTING
 
 // Initialize app
-var app = new ArtManager(document.getElementById("js-canvas"), document.getElementById("js-favicon"));
+const app = new ArtManager(document.getElementById("js-canvas"), document.getElementById("js-favicon"));
 
 // Get elements
-var button = document.getElementById("js-draw");
-var pixel = document.getElementById("js-pixel");
-var palettes = document.getElementById("js-palettes");
-var algorithms = document.getElementById("js-algorithm");
-var advancedStatsEnabled = document.getElementById("js-advancedStatsEnabled");
+const button = document.getElementById("js-draw");
+const pixel = document.getElementById("js-pixel");
+const palettes = document.getElementById("js-palettes");
+const algorithms = document.getElementById("js-algorithm");
+const advancedStatsEnabled = document.getElementById("js-advancedStatsEnabled");
 
-var allPalettes = app.getPalettes();
+const timeStat = document.getElementById("js-time");
+const pixelCountStat = document.getElementById("js-pixel-count");
+const timesGeneratedStat = document.getElementById("js-times-generated");
+const averageTimeStat = document.getElementById("js-average-time");
+
+const allPalettes = app.getPalettes();
 
 // Initialize values
 allPalettes.forEach((palette) => {
@@ -27,7 +32,7 @@ algorithms.value = app.getAlgorithm();
 advancedStatsEnabled.value = app.getAdvancedStatsEnabled();
 
 function generateArt() {
-    var t1 = performance.now(); // TESTING
+
     var stats = app.generate();
 
     // Stats testing
@@ -36,9 +41,12 @@ function generateArt() {
         console.log(advanced);
     });
 
-    var t2 = performance.now(); // TESTING
-    document.getElementById("js-time").innerText = `${Math.round(t2 - t1)}ms`; // TESTING
-    perfTests.push(t2 - t1); // TESTING
+    // Populate basic stats
+    timeStat.innerText = `${stats.basic.generationTime}ms`;
+    pixelCountStat.innerText = `${stats.basic.pixelCount} pixels`;
+    timesGeneratedStat.innerText = `${stats.basic.timesGenerated} generations`;
+    averageTimeStat.innerText = `${stats.basic.averageGenerationTime}ms`;
+
 }
 
 button.onclick = generateArt;
