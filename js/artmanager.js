@@ -1,6 +1,6 @@
 // Constants!
 const FAVICON_SIZE = 256;
-const INIT_PIXELSIZE = 4;
+const INIT_PIXELSIZE = 3;
 const INIT_PALETTE = "Random";
 const INIT_ALGORITHM = "Standard";
 const TOP_COLOR_COUNT_MAX = 5;
@@ -19,11 +19,13 @@ const SPARSE_PROB = 0.7;
 const SMEAR_PROB = 0.9;
 const SMEAR_PROB_ADJUST = 0.08;
 const LINE_PROB = 0.6;
-const TEAR_PROB = 0.96;
-const PLAID_PROB = 0.85;
-const PLAID_MIN_THICK = 2;
+const CASCADE_PROB = 0.975;
+const CASCADE_PROB_ADJUST = 0.02;
+const PLAID_PROB = 0.07;
+const PLAID_MIN_THICK = 3;
 const PLAID_MAX_THICK = 5;
 const PLAID_MIN_GAP = 6;
+const PLAID_OPACITY = .7;
 
 
 function ArtManager(canvas, favicon = null) {
@@ -731,10 +733,10 @@ ArtManager.prototype._algorithms = {
                 }
 
                 // Randomly determine which color to select
-                if (random < TEAR_PROB / 2) {
+                if (random < (CASCADE_PROB + CASCADE_PROB_ADJUST / this.pixelSize) / 2) {
                     color = aboveColor || leftColor || this._getColor();
                 }
-                else if (random < TEAR_PROB) {
+                else if (random < (CASCADE_PROB + CASCADE_PROB_ADJUST / this.pixelSize)) {
                     color = leftColor || aboveColor || this._getColor();
                 }
                 else {
@@ -779,7 +781,7 @@ ArtManager.prototype._algorithms = {
         for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
 
             // Only generate a new color if the line gap and mathematical gods allow it
-            if (yThickness == 0 && yLineGap == 0 && Math.random() >= PLAID_PROB) {
+            if (yThickness == 0 && yLineGap == 0 && Math.random() < PLAID_PROB) {
                 currLineColor = this._getColor();
                 yThickness = Math.round(Math.random() * (PLAID_MAX_THICK - PLAID_MIN_THICK)) + PLAID_MIN_THICK;
                 yLineGap = PLAID_MIN_GAP;
@@ -808,8 +810,11 @@ ArtManager.prototype._algorithms = {
                         if (xLineGap > 0) xLineGap -= 1;
 
                         // Only generate a new color if the line gap and mathematical gods allow it
-                        if (xLineGap == 0 && Math.random() >= PLAID_PROB) {
-                            color = this._getColor();
+                        if (xLineGap == 0 && Math.random() < PLAID_PROB) {
+                            let tempColor = this._getColor();
+                            color = [Math.floor(mainColor[0] * (1 - PLAID_OPACITY) + tempColor[0] * PLAID_OPACITY),
+                                     Math.floor(mainColor[1] * (1 - PLAID_OPACITY) + tempColor[1] * PLAID_OPACITY),
+                                     Math.floor(mainColor[2] * (1 - PLAID_OPACITY) + tempColor[2] * PLAID_OPACITY)]
                             xThickness = Math.round(Math.random() * (PLAID_MAX_THICK - PLAID_MIN_THICK)) + PLAID_MIN_THICK;
                             xLineGap = PLAID_MIN_GAP;
                         }
@@ -830,30 +835,16 @@ ArtManager.prototype._algorithms = {
                         currLineColor[1] != mainColor[1] &&
                         currLineColor[2] != mainColor[2]) {
 
-                        let currPatternColor = horizontalPattern[x/this.pixelSize];
+                        let currPatternColor = horizontalPattern[x / this.pixelSize];
 
-                        // If we need to average the non-main line colors
-                        if (currLineColor[0] != mainColor[0] &&
-                            currLineColor[1] != mainColor[1] &&
-                            currLineColor[2] != mainColor[2] && 
-                            currPatternColor[0] != mainColor[0] &&
-                            currPatternColor[1] != mainColor[1] &&
-                            currPatternColor[2] != mainColor[2]) {
-                            
-                            color = [Math.floor((currPatternColor[0] + currLineColor[0]) / 2),
-                                     Math.floor((currPatternColor[1] + currLineColor[1]) / 2),
-                                     Math.floor((currPatternColor[2] + currLineColor[2]) / 2)]
-                        }
-
-                        // Simply use the current line color
-                        else {
-                            color = currLineColor;
-                        }
+                        color = [Math.floor(currPatternColor[0] * (1 - PLAID_OPACITY) + currLineColor[0] * PLAID_OPACITY),
+                                 Math.floor(currPatternColor[1] * (1 - PLAID_OPACITY) + currLineColor[1] * PLAID_OPACITY),
+                                 Math.floor(currPatternColor[2] * (1 - PLAID_OPACITY) + currLineColor[2] * PLAID_OPACITY)]
                     }
 
                     // Otherwise simply render the main horizontal pattern
                     else {
-                        color = horizontalPattern[x/this.pixelSize];
+                        color = horizontalPattern[x / this.pixelSize];
                     }
                 }
 
