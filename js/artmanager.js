@@ -870,5 +870,42 @@ ArtManager.prototype._algorithms = {
         }
 
         return buffer;
+    },
+    "Rings": function() {
+
+        let buffer = new Uint8Array(this.width * this.height * 4);
+        let rings = new Array(Math.floor(this.width / this.pixelSize));
+
+        for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
+
+            for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
+
+                let realX = (x - this.width / 2) / this.pixelSize;
+                let realY = (y - this.height / 2) / this.pixelSize;
+                let ring = Math.floor(Math.sqrt(realX*realX + realY*realY));
+
+                let color = rings[ring];
+                if (!color) {
+                    rings[ring] = color = this._getColor();
+                }
+
+                let yMax = Math.min(y + this.pixelSize, this.height);
+                let xMax = Math.min(x + this.pixelSize, this.width);
+
+                for (let py = y; py < yMax; py++) {
+                    for (let px = x; px < xMax; px++) {
+
+                        let pos = (py * this.width + px) * 4;
+
+                        buffer[pos] = color[0];
+                        buffer[pos + 1] = color[1];
+                        buffer[pos + 2] = color[2];
+                        buffer[pos + 3] = 255;
+                    }
+                }
+            }
+        }
+
+        return buffer;
     }
 }
