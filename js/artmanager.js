@@ -1,12 +1,11 @@
 // Constants!
 const FAVICON_SIZE = 256;
-const INIT_PIXELSIZE = 3;
-const INIT_PALETTE = "Random";
-const INIT_ALGORITHM = "Standard";
+const RANDOM_PIXEL_MIN = 1;
+const RANDOM_PIXEL_MAX = 6;
 const TOP_COLOR_COUNT_MAX = 5;
 
 // Color palette constants
-const MATRIX_PROB = 0.18;
+const MATRIX_PROB = 0.35;
 const MURICA_VARIANCE = 15;
 const GOOGLE_VARIANCE = 20;
 
@@ -15,7 +14,7 @@ const GREEN_PRIME = 74306387;
 const BLUE_PRIME = 19392253;
 
 // Algorithm constants
-const SPARSE_PROB = 0.7;
+const SPARSE_PROB = 0.85;
 const SMEAR_PROB = 0.9;
 const SMEAR_PROB_ADJUST = 0.08;
 const LINE_PROB = 0.6;
@@ -24,34 +23,11 @@ const CASCADE_PROB_ADJUST = 0.02;
 const PLAID_PROB = 0.07;
 const PLAID_MIN_THICK = 3;
 const PLAID_MAX_THICK = 5;
-const PLAID_MIN_GAP = 6;
+const PLAID_MIN_GAP = 5;
 const PLAID_OPACITY = .7;
 
 
 function ArtManager(canvas, favicon = null) {
-
-    // Initialize object variables
-    this.canvas = canvas;
-    this.context = canvas.getContext("2d");
-    this.favicon = favicon;
-    this.generatedImage = null;
-
-    this.width = this.canvas.clientWidth;
-    this.height = this.canvas.clientHeight;
-
-    this.palette = INIT_PALETTE;
-    this.algorithm = INIT_ALGORITHM;
-    this.pixelSize = INIT_PIXELSIZE;
-
-    this.basicStats = {};
-    this.advancedStats = {};
-
-    this.advancedStatsEnabled = true;
-
-    this._timesGenerated = 0;
-    this._generationTimes = [];
-    this._getColor = this._palettes[INIT_PALETTE].bind(this);
-
 
     // Populate the palette of the day only once
     let date = new Date();
@@ -70,6 +46,27 @@ function ArtManager(canvas, favicon = null) {
                 this._getRandomInt(green1, green2),
                 this._getRandomInt(blue1, blue2)];
     }
+
+    // Initialize object variables
+    this.canvas = canvas;
+    this.context = canvas.getContext("2d");
+    this.favicon = favicon;
+    this.generatedImage = null;
+
+    this.width = this.canvas.clientWidth;
+    this.height = this.canvas.clientHeight;
+
+    this.randomizeSettings();
+
+    this.basicStats = {};
+    this.advancedStats = {};
+
+    this.advancedStatsEnabled = true;
+
+    this._timesGenerated = 0;
+    this._generationTimes = [];
+    this._getColor = this._palettes[this.palette].bind(this);
+
 }
 
 /* Getters */
@@ -120,6 +117,13 @@ ArtManager.prototype.setAdvancedStatsEnabled = function(advancedStatsEnabled) {
     this.advancedStatsEnabled = advancedStatsEnabled;
 }
 
+
+ArtManager.prototype.randomizeSettings = function() {
+    this.setPalette(this._getRandomKeyFromObject(this._palettes));
+    this.setAlgorithm(this._getRandomKeyFromObject(this._algorithms));
+    this.setAlgorithm(this._getRandomKeyFromObject(this._algorithms));
+    this.setPixelSize(this._getRandomInt(RANDOM_PIXEL_MIN, RANDOM_PIXEL_MAX));
+}
 
 ArtManager.prototype.generate = function() {
 
@@ -172,7 +176,7 @@ ArtManager.prototype.generate = function() {
         // Calculate and populate advanced stats
         if (this.advancedStatsEnabled) {
             setTimeout(() => {
-                this.advancedStats = this._generateAdvancedStats.bind(this)(buffer);
+                this.advancedStats = this._generateAdvancedStats(buffer);
                 resolve(this.advancedStats);
             }, 0);
         }
@@ -367,6 +371,11 @@ ArtManager.prototype._numberToHex = function(num) {
 
 ArtManager.prototype._getRandomInt = function(n1, n2) {
     return Math.floor(Math.random() * (Math.abs(n1 - n2) + 1)) + Math.min(n1, n2); 
+}
+
+ArtManager.prototype._getRandomKeyFromObject = function(object) {
+    let keys = Object.keys(object);
+    return keys[Math.floor(Math.random() * keys.length)];
 }
 
 /* ArtManager object options */
