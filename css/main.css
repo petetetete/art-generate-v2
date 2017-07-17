@@ -24,7 +24,6 @@
     --neutral-color--dark: #818181;
 
     --base-text-color: #333;
-
 }
 
 html, body {
@@ -120,8 +119,13 @@ html, body {
         margin-left: var(--elem-spacing);
         font-size: 1.1rem;
     }
-    .body__settings > input,
-    .body__settings > select {
+
+    .body__options {
+        display: flex;
+        flex-direction: column;
+    }
+    .body__options > input,
+    .body__options > select {
         margin-top: 3px;
         margin-bottom: 10px;
         border-radius: var(--border-radius);
@@ -132,13 +136,12 @@ html, body {
 
         transition: border 0.15s ease;
     }
-    .body__settings > input:focus,
-    .body__settings > select:focus {
+    .body__options > input:focus,
+    .body__options > select:focus {
         border-color: var(--primary-color--light);
         outline: 0;
         transition: none;
     }
-    
 
     .body__submit {
         padding: 7px 15px;
@@ -146,8 +149,7 @@ html, body {
         border: 2px solid var(--primary-color);
         color: var(--primary-color);
         outline: 0;
-        height: 41px;
-        font-size: 1.1em;
+        font-size: 1.2em;
         border-radius: var(--border-radius);
         margin: 5px 0;
         font-family: Roboto Condensed;
@@ -220,7 +222,7 @@ html, body {
 
 
 /* Large */
-@media (max-width: 993px) {
+@media (max-width: 992px) {
 
     .basic-stats {
         flex-direction: column;
@@ -237,21 +239,46 @@ html, body {
 }
 
 /* Medium */
-@media (max-width: 781px) {
+@media (max-width: 780px) {
+
+    body {
+        background-color: transparent;
+    }
+
+    .container {
+        margin-top: calc(100vh - 242px);
+        background-color: rgba(255,255,255,0.75);
+    }
+
+    .header {
+        z-index: 1;
+        
+    }
 
     .body {
         flex-direction: column;
     }
 
         .body__container {
-            min-height: 100px;
-            height: 500px;
-            resize: vertical;
-            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            z-index: -1;
         }
 
         .body__settings {
             margin-left: 0;
+        }
+
+        .body__options {
+            order: 1;
+        }
+
+        .body__submit--secondary {
+            margin-bottom: 12px;
         }
 
     .basic-stats__item-cont {
