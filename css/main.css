@@ -143,12 +143,17 @@ html, body {
         transition: none;
     }
 
+    .body__buttons {
+        display: flex;
+        flex-direction: column;
+    }
     .body__submit {
         padding: 7px 15px;
         background-color: transparent;
         border: 2px solid var(--primary-color);
         color: var(--primary-color);
         outline: 0;
+        min-height: 43px;
         font-size: 1.2em;
         border-radius: var(--border-radius);
         margin: 5px 0;
@@ -246,7 +251,7 @@ html, body {
     }
 
     .container {
-        margin-top: calc(100vh - 242px);
+        margin-top: calc(100vh - 240px);
         background-color: rgba(255,255,255,0.75);
     }
 
@@ -271,14 +276,28 @@ html, body {
 
         .body__settings {
             margin-left: 0;
+
+            position: relative;
+            padding: 0;
+            margin-bottom: 0;
+            background-color: transparent;
+            border-radius: 0;
+            box-shadow: none;
         }
 
         .body__options {
+            position: relative;
             order: 1;
         }
 
-        .body__submit--secondary {
-            margin-bottom: 12px;
+        .body__buttons, .body__options {
+            position: relative;
+            padding: 10px;
+            margin-bottom: var(--elem-spacing);
+            background-color: var(--elem-color);
+            border-radius: 2px;
+            box-shadow: 0 2px 5px 0 rgba(0,0,0,.18),
+                        0 0 2px 0 rgba(0,0,0,.2);
         }
 
     .basic-stats__item-cont {

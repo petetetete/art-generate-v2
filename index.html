@@ -21,9 +21,9 @@
                     <canvas class="canvas" id="js-canvas"></canvas>
                 </div>
                 <div class="body__settings material">
-                    <div class="material__title">Settings</div>
 
                     <div class="body__options">
+                    <div class="material__title">Settings</div>
                         <label>Select Pixel Size</label>
                         <input id="js-pixel" type="number" placeholder="pixel size" />
 
@@ -40,15 +40,18 @@
                         </select>
                     </div>
 
-                    <button id="js-draw" class="body__submit">
-                        <span class="body__submit-text">Draw</span>
-                        <i class="loading-spinner fa fa-refresh fa-spin"></i>
-                    </button>
+                    <div class="body__buttons">
+                        <button id="js-draw" class="body__submit">
+                            <span class="body__submit-text">Draw</span>
+                            <i class="loading-spinner fa fa-refresh fa-spin"></i>
+                        </button>
 
-                    <button id="js-randomize" class="body__submit body__submit--secondary">
-                        <span class="body__submit-text">Randomize & Draw</span>
-                        <i class="loading-spinner fa fa-refresh fa-spin"></i>
-                    </button>
+                        <button id="js-randomize" class="body__submit body__submit--secondary">
+                            <span class="body__submit-text">Randomize & Draw</span>
+                            <i class="loading-spinner fa fa-refresh fa-spin"></i>
+                        </button>
+                    </div>
+                    
                 </div>
             </div>
 
