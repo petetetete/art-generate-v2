@@ -24,6 +24,10 @@
     --neutral-color--dark: #818181;
 
     --base-text-color: #333;
+
+    --material-padding: 10px;
+    --material-border-radius: 2px;
+    --material-box-shadow: 0 2px 5px 0 rgba(0,0,0,.18), 0 0 2px 0 rgba(0,0,0,.2);
 }
 
 html, body {
@@ -37,12 +41,11 @@ html, body {
 
 .material {
     position: relative;
-    padding: 10px;
+    padding: var(--material-padding);
     margin-bottom: var(--elem-spacing);
     background-color: var(--elem-color);
-    border-radius: 2px;
-    box-shadow: 0 2px 5px 0 rgba(0,0,0,.18),
-                0 0 2px 0 rgba(0,0,0,.2);
+    border-radius: var(--material-border-radius);
+    box-shadow: var(--material-box-shadow);
 }
 
     .material__title {
@@ -52,6 +55,7 @@ html, body {
         font-size: 1.45rem;
         background-color: var(--primary-color);
         color: #fff;
+        z-index: 1;
         border-radius: var(--border-radius);
 
         box-shadow: 0 2px 5px 0 rgba(0,0,0,.18),
@@ -226,6 +230,53 @@ html, body {
     }
 
 
+.adv-stats {
+    font-size: 1.1rem;
+    min-height: 200px;
+}
+
+    .adv-stats__loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        display: none;
+        background-color: rgba(255,255,255,0.9);
+    }
+    .art-loading .adv-stats__loading {
+        display: flex;
+    }
+
+    .adv-stats__top-color {
+        height: 42px;
+        display: flex;
+        margin-top: 6px;
+
+    }
+    
+    .adv-stats__top-color-title {
+        box-shadow: 0 1px 3px 0 rgba(0,0,0,.18),
+                    0 0 1px 0 rgba(0,0,0,.2);
+    }
+    .adv-stats__top-color-name {
+        width: 175px;
+        height: 42px;
+        line-height: 42px;
+        text-align: center;
+        font-size: 0.85em;
+        background-color: rgba(240,240,240,0.65);
+        text-shadow: 1px 1px rgba(255,255,255,0.45);
+    }
+
+    .adv-stats__top-color-bar {
+        border-radius: 0 5px 5px 0;
+        box-shadow: 0 1px 3px 0 rgba(0,0,0,.18), 0 0 1px 0 rgba(0,0,0,.2);
+    }
+
+
 /* Large */
 @media (max-width: 992px) {
 
@@ -253,6 +304,7 @@ html, body {
     .container {
         margin-top: calc(100vh - 284px);
         background-color: rgba(255,255,255,0.55);
+        box-shadow: var(--material-box-shadow);
     }
 
     .body {
@@ -287,12 +339,11 @@ html, body {
 
         .body__buttons, .body__options {
             position: relative;
-            padding: 10px;
+            padding: var(--material-padding);
             margin-bottom: var(--elem-spacing);
             background-color: var(--elem-color);
-            border-radius: 2px;
-            box-shadow: 0 2px 5px 0 rgba(0,0,0,.18),
-                        0 0 2px 0 rgba(0,0,0,.2);
+            border-radius: var(--material-border-radius);
+            box-shadow: var(--material-box-shadow);
         }
 
     .basic-stats__item-cont {

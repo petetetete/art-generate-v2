@@ -16,6 +16,8 @@ const pixelCountStat = document.getElementById("js-pixel-count");
 const timesGeneratedStat = document.getElementById("js-times-generated");
 const averageTimeStat = document.getElementById("js-average-time");
 
+const topColors = document.getElementById("js-top-colors");
+
 const allPalettes = app.getPalettes();
 
 
@@ -30,17 +32,17 @@ function generateArt() {
     // Stats testing
     console.log(stats.basic);
     stats.advanced.then((advanced) => {
-        console.log(advanced);
+
+        if (advanced) {
+            populateAdvancedStats(advanced);
+        }
 
         // Remove loading spinners
         document.body.classList.remove("art-loading");
     });
 
     // Populate basic stats
-    timeStat.innerText = `${stats.basic.generationTime}ms`;
-    pixelCountStat.innerText = `${stats.basic.pixelCount} pixels`;
-    timesGeneratedStat.innerText = `${stats.basic.timesGenerated} generations`;
-    averageTimeStat.innerText = `${stats.basic.averageGenerationTime}ms`;
+    populateBasicStats(stats.basic);
 
 }
 
@@ -49,6 +51,27 @@ function updateOptions() {
     palettes.value = app.getPalette();
     algorithms.value = app.getAlgorithm();
     advancedStatsEnabled.value = app.getAdvancedStatsEnabled();
+}
+
+function populateBasicStats(stats) {
+    timeStat.innerText = `${stats.generationTime}ms`;
+    pixelCountStat.innerText = `${stats.pixelCount} pixels`;
+    timesGeneratedStat.innerText = `${stats.timesGenerated} generations`;
+    averageTimeStat.innerText = `${stats.averageGenerationTime}ms`;
+}
+
+function populateAdvancedStats(stats) {
+    console.log(stats);
+    const topAppearance = stats.topColorAppearances[0].count;
+
+    topColors.innerHTML = stats.topColorAppearances.map((color) => `
+        <div class="adv-stats__top-color">
+            <div class="adv-stats__top-color-title" style="background-color:${color.hex};">
+                <div class="adv-stats__top-color-name">${color.hex} - ${color.count} times</div>
+            </div>
+            <div class="adv-stats__top-color-bar" style="width:${color.count / topAppearance * 100}%;background-color:${color.hex};"></div>
+        </div>
+    `).join("");
 }
 
 randomizeButton.onclick = (_) => {
