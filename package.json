@@ -1,0 +1,26 @@
+{
+  "name": "art-generate-v2-webpack",
+  "version": "1.0.0",
+  "description": "A WIP improvement to my previous application, art-generate.",
+  "private": "true",
+  "scripts": {
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/petetetete/art-generate-v2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/petetetete/art-generate-v2/issues"
+  },
+  "homepage": "https://github.com/petetetete/art-generate-v2#readme",
+  "devDependencies": {
+    "css-loader": "^0.28.11",
+    "style-loader": "^0.21.0",
+    "webpack": "^4.15.1",
+    "webpack-cli": "^3.0.8"
+  }
+}

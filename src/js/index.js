@@ -1,3 +1,6 @@
+import "../css/main.css";
+import ArtManager from "./artmanager.js";
+
 var perfTests = []; // TESTING
 
 // Initialize app
