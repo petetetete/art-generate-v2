@@ -1,7 +1,7 @@
 {
   "name": "art-generate-v2-webpack",
   "version": "1.0.0",
-  "description": "A WIP improvement to my previous application, art-generate.",
+  "description": "A trial in javascript optimization in the form of colorful pixels.",
   "private": "true",
   "scripts": {
     "build": "webpack"

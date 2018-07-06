@@ -1,2 +1,4 @@
 # art-generate-v2
-A WIP improvement to my previous application, art-generate.
+A trial in javascript optimization in the form of colorful pixels.
+
+[Under Construction]

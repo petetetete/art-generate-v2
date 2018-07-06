@@ -1,20 +1,37 @@
 import palettes from "./palettes.js";
 import algorithms from "./algorithms.js";
 
-// Constants!
-const FAVICON_SIZE = 256;
-const RANDOM_PIXEL_MIN = 1;
-const RANDOM_PIXEL_MAX = 6;
-const TOP_COLOR_COUNT_MAX = 5;
-
-const RED_PRIME = 62287637;
-const GREEN_PRIME = 74306387;
-const BLUE_PRIME = 19392253;
-
 
 class ArtManager {
 
     constructor(canvas, favicon = null) {
+
+        // General constants
+        this.FAVICON_SIZE = 256;
+        this.RANDOM_PIXEL_MIN = 1;
+        this.RANDOM_PIXEL_MAX = 6;
+        this.TOP_COLOR_COUNT_MAX = 5;
+        this.RED_PRIME = 62287637;
+        this.GREEN_PRIME = 74306387;
+        this.BLUE_PRIME = 19392253;
+
+        // Color palette constants
+        this.MATRIX_PROB = 0.35;
+        this.MURICA_VARIANCE = 15;
+        this.GOOGLE_VARIANCE = 20;
+
+        // Algorithm constants
+        this.SPARSE_PROB = 0.85;
+        this.SMEAR_PROB = 0.9;
+        this.SMEAR_PROB_ADJUST = 0.08;
+        this.LINE_PROB = 0.6;
+        this.CASCADE_PROB = 0.975;
+        this.CASCADE_PROB_ADJUST = 0.02;
+        this.PLAID_PROB = 0.07;
+        this.PLAID_MIN_THICK = 3;
+        this.PLAID_MAX_THICK = 5;
+        this.PLAID_MIN_GAP = 5;
+        this.PLAID_OPACITY = .7;
 
         // Import palette and algorithm objects
         this._palettes = palettes;
@@ -22,15 +39,17 @@ class ArtManager {
 
         // Populate the palette of the day only once
         let date = new Date();
-        let dailyNumber = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
-        let dailyNumber2 = date.getDate() * 1000000 + date.getFullYear() * 100 + (date.getMonth() + 1);
+        let dailyNumber = date.getFullYear() * 10000 +
+            (date.getMonth() + 1) * 100 + date.getDate();
+        let dailyNumber2 = date.getDate() * 1000000 +
+            date.getFullYear() * 100 + (date.getMonth() + 1);
 
-        let red1 = RED_PRIME * dailyNumber % 256,
-            red2 = RED_PRIME * dailyNumber2 % 256,
-            green1 = GREEN_PRIME * dailyNumber % 256,
-            green2 = GREEN_PRIME * dailyNumber2 % 256,
-            blue1 = BLUE_PRIME * dailyNumber % 256,
-            blue2 = BLUE_PRIME * dailyNumber2 % 256;
+        let red1 = this.RED_PRIME * dailyNumber % 256,
+            red2 = this.RED_PRIME * dailyNumber2 % 256,
+            green1 = this.GREEN_PRIME * dailyNumber % 256,
+            green2 = this.GREEN_PRIME * dailyNumber2 % 256,
+            blue1 = this.BLUE_PRIME * dailyNumber % 256,
+            blue2 = this.BLUE_PRIME * dailyNumber2 % 256;
 
         this._palettes["Of the Day!"] = function() {
             return [this._getRandomInt(red1, red2),
@@ -43,23 +62,23 @@ class ArtManager {
         this.context = canvas.getContext("2d");
         this.favicon = favicon;
         this.generatedImage = null;
-
         this.width = this.canvas.clientWidth;
         this.height = this.canvas.clientHeight;
 
+        // Randomize initial settings
         this.randomizeSettings();
+        this._getColor = this._palettes[this.palette].bind(this);
 
+        // Initialize stat tracking variables
         this.basicStats = {};
         this.advancedStats = {};
-
         this.advancedStatsEnabled = true;
-
         this._timesGenerated = 0;
         this._generationTimes = [];
-        this._getColor = this._palettes[this.palette].bind(this);
     }
 
     /* Getters */
+
     getWidth() { return this.width }
     getHeight() { return this.height }
     getPixelSize() { return this.pixelSize }
@@ -70,17 +89,12 @@ class ArtManager {
     getAlgorithms() { return Object.keys(this._algorithms); }
 
     /* Setters */
-    setWidth(width) {
-        let calcWidth = Math.max(1, parseInt(width));
 
-        this.canvas.width = calcWidth;
-        this.width = calcWidth;
+    setWidth(width) {
+        this.width = this.canvas.width = Math.max(1, parseInt(width));
     }
     setHeight(height) {
-        let calcHeight = Math.max(1, parseInt(height));
-
-        this.canvas.height = calcHeight;
-        this.height = calcHeight;
+        this.height = this.canvas.height = Math.max(1, parseInt(height));
     }
     setPixelSize(size) {
         this.pixelSize = Math.max(1, parseInt(size));
@@ -97,11 +111,13 @@ class ArtManager {
     }
 
     /* Core methods */
+
     randomizeSettings() {
         this.setPalette(this._getRandomKeyFromObject(this._palettes));
         this.setAlgorithm(this._getRandomKeyFromObject(this._algorithms));
         this.setAlgorithm(this._getRandomKeyFromObject(this._algorithms));
-        this.setPixelSize(this._getRandomInt(RANDOM_PIXEL_MIN, RANDOM_PIXEL_MAX));
+        this.setPixelSize(this._getRandomInt(this.RANDOM_PIXEL_MIN,
+            this.RANDOM_PIXEL_MAX));
     }
 
     generate() {
@@ -118,7 +134,8 @@ class ArtManager {
         this.advancedStats = {};
 
         // Stat tracking variables
-        let pixelCount = (this.width * this.height) / (this.pixelSize * this.pixelSize);
+        let pixelCount = (this.width * this.height) /
+            (this.pixelSize * this.pixelSize);
         let startTime = performance.now();
 
         // Populate buffer with colors
@@ -139,9 +156,10 @@ class ArtManager {
 
         this.basicStats["timesGenerated"] = this._timesGenerated;
         this.basicStats["generationTime"] = generationTime;
-        // TODO: Consider calculating this without a reduce because reduce is slow
+        // TODO: Consider calculating this without a reduce to improve perf
         this.basicStats["averageGenerationTime"]
-            = Math.floor(this._generationTimes.reduce((a, b) => a + b) / this._generationTimes.length);
+            = Math.floor(this._generationTimes.reduce((a, b) => a + b) /
+                this._generationTimes.length);
         this.basicStats["pixelCount"] = Math.round(pixelCount * 100) / 100;
 
         // Update favicon asynchronously
@@ -197,7 +215,6 @@ class ArtManager {
         }
 
         for (let y = 0, h = this.height; y < h; y += this.pixelSize) {
-
             for (let x = 0, w = this.width; x < w; x += this.pixelSize) {
 
                 // Variables associated with the current pixel
@@ -207,11 +224,14 @@ class ArtManager {
                 let blue = buffer[pos + 2];
 
                 // Check if the color is a consecutive color
-                if (red == lastColor[0] && green == lastColor[1] && blue == lastColor[2]) {
+                if (red == lastColor[0] && green == lastColor[1] &&
+                    blue == lastColor[2]) {
                     consecutiveStreak += 1;
                 }
                 else if (consecutiveStreak > consecutive.count) {
-                    consecutive.color[0] = red, consecutive.color[1] = green, consecutive.color[2] = blue;
+                    consecutive.color[0] = red;
+                    consecutive.color[1] = green;
+                    consecutive.color[2] = blue;
                     consecutive.count = consecutiveStreak;
                     consecutiveStreak = 0;
                 }
@@ -230,11 +250,15 @@ class ArtManager {
                 let colorValue = red + green + blue;
                 if (colorValue < darkest.value) {
                     darkest.value = colorValue;
-                    darkest.color[0] = red, darkest.color[1] = green, darkest.color[2] = blue;
+                    darkest.color[0] = red;
+                    darkest.color[1] = green;
+                    darkest.color[2] = blue;
                 }
                 if (colorValue > lightest.value) {
                     lightest.value = colorValue;
-                    lightest.color[0] = red, lightest.color[1] = green, lightest.color[2] = blue;
+                    lightest.color[0] = red;
+                    lightest.color[1] = green;
+                    lightest.color[2] = blue;
                 }
 
                 // Add to density totals
@@ -244,7 +268,6 @@ class ArtManager {
 
                 // Save current color
                 lastColor[0] = red, lastColor[1] = green, lastColor[2] = blue;
-
             }
         }
 
@@ -266,38 +289,39 @@ class ArtManager {
         }
 
         // Get the most frequent colors
-        let sortedColors = Object.keys(allColors).sort(function(a, b) {return -(allColors[a] - allColors[b])});
-        let topColors = sortedColors.slice(0, TOP_COLOR_COUNT_MAX).map((color) => {
-            return {
+        let sortedColors = Object.keys(allColors)
+            .sort((a, b) => allColors[b] - allColors[a]);
+        let topColors = sortedColors.slice(0, this.TOP_COLOR_COUNT_MAX)
+            .map(color => ({
                 rgb: this._numberToRGB(color),
                 hex: this._numberToHex(color),
                 count: allColors[color]
-            };
-        });
+            }));
 
         // Calculate the average color with the densities
-        let averageColor = [Math.round(densityTotals[0] / this.basicStats.pixelCount),
-                            Math.round(densityTotals[1] / this.basicStats.pixelCount),
-                            Math.round(densityTotals[2] / this.basicStats.pixelCount)];
+        let averageColor = [Math.round(densityTotals[0] /
+                                this.basicStats.pixelCount),
+                            Math.round(densityTotals[1] /
+                                this.basicStats.pixelCount),
+                            Math.round(densityTotals[2] /
+                                this.basicStats.pixelCount)];
         let average = {
             rgb: averageColor,
             hex: this._rgbToHex(averageColor)
         };
-
 
         let endTime = performance.now();
 
         // Fill advanced stats object
         stats["calculationTime"] = Math.floor(endTime - startTime);
         stats["uniqueColors"] = uniqueColors;
-        stats["consecutiveColor"] = consecutiveStat; // Meh, dunno if this is a good stat
+        stats["consecutiveColor"] = consecutiveStat; // Meh, dunno about this
         stats["darkestColor"] = darkestStat
         stats["lightestColor"] = lightestStat;
         stats["topColorAppearances"] = topColors;
         stats["averageColor"] = average;
 
         return stats;
-
     }
 
     _updateFavicon() {
@@ -306,23 +330,23 @@ class ArtManager {
         const tempContext = tempCanvas.getContext("2d");
         const thumbImg = document.createElement('img');
 
-        tempCanvas.width = FAVICON_SIZE;
-        tempCanvas.height = FAVICON_SIZE;
+        tempCanvas.width = this.FAVICON_SIZE;
+        tempCanvas.height = this.FAVICON_SIZE;
 
         thumbImg.onload = () => {
 
             // Clip a circle and draw canvas image
             tempContext.beginPath();
-            tempContext.arc(FAVICON_SIZE/2, FAVICON_SIZE/2, FAVICON_SIZE/2, 0, Math.PI * 2, true);
+            tempContext.arc(this.FAVICON_SIZE / 2, this.FAVICON_SIZE / 2,
+                this.FAVICON_SIZE/2, 0, Math.PI * 2, true);
             tempContext.closePath();
             tempContext.clip();
-            tempContext.drawImage(thumbImg, 0, 0, FAVICON_SIZE, FAVICON_SIZE);
+            tempContext.drawImage(thumbImg, 0, 0,
+                this.FAVICON_SIZE, this.FAVICON_SIZE);
             this.favicon.href = tempCanvas.toDataURL();
-
         }
 
         thumbImg.src = this.canvas.toDataURL();
-
     }
 
     /* Simple operation helpers */
@@ -349,7 +373,8 @@ class ArtManager {
     }
 
     _getRandomInt(n1, n2) {
-        return Math.floor(Math.random() * (Math.abs(n1 - n2) + 1)) + Math.min(n1, n2); 
+        return Math.floor(Math.random() *
+            (Math.abs(n1 - n2) + 1)) + Math.min(n1, n2); 
     }
 
     _getRandomKeyFromObject(object) {
@@ -358,6 +383,5 @@ class ArtManager {
     }
 
 }
-
 
 export default ArtManager;

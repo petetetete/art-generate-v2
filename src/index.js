@@ -1,5 +1,5 @@
-import "../css/main.css";
-import ArtManager from "./artmanager.js";
+import "./styles/main.css";
+import ArtManager from "./art_manager";
 
 var perfTests = []; // TESTING
 
